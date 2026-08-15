@@ -39,6 +39,7 @@ class VideoClip extends TimelineMediaClip {
     this.trimStart = Duration.zero,
     Duration? trimEnd,
     this.speed = 1.0,
+    this.transitionOut = Duration.zero,
   }) : trimEnd = trimEnd ?? media.duration;
 
   @override
@@ -49,6 +50,7 @@ class VideoClip extends TimelineMediaClip {
   final Duration trimEnd;
   @override
   final double speed;
+  final Duration transitionOut;
 
   Duration get sourceSpan {
     final raw = trimEnd - trimStart;
@@ -74,6 +76,7 @@ class VideoClip extends TimelineMediaClip {
       trimStart: clip.trimStart,
       trimEnd: clip.trimEnd,
       speed: clip.speed,
+      transitionOut: clip.transitionOut,
     );
   }
 
@@ -87,6 +90,7 @@ class VideoClip extends TimelineMediaClip {
       trimEnd: trimEnd,
       speed: speed,
       kind: TimelineClipKind.video,
+      transitionOut: transitionOut,
     );
   }
 
@@ -96,6 +100,7 @@ class VideoClip extends TimelineMediaClip {
     Duration? trimStart,
     Duration? trimEnd,
     double? speed,
+    Duration? transitionOut,
   }) {
     return VideoClip(
       id: id ?? this.id,
@@ -103,6 +108,7 @@ class VideoClip extends TimelineMediaClip {
       trimStart: trimStart ?? this.trimStart,
       trimEnd: trimEnd ?? this.trimEnd,
       speed: speed ?? this.speed,
+      transitionOut: transitionOut ?? this.transitionOut,
     );
   }
 
@@ -114,6 +120,8 @@ class VideoClip extends TimelineMediaClip {
     'trimStartMs': trimStart.inMilliseconds,
     'trimEndMs': trimEnd.inMilliseconds,
     'speed': speed,
+    if (transitionOut > Duration.zero)
+      'transitionOutMs': transitionOut.inMilliseconds,
   };
 
   factory VideoClip.fromJson(Map<String, dynamic> json) {
@@ -129,11 +137,21 @@ class VideoClip extends TimelineMediaClip {
             json['trimEndMs'] as int? ?? media.duration.inMilliseconds,
       ),
       speed: (json['speed'] as num?)?.toDouble() ?? 1.0,
+      transitionOut: json['transitionOutMs'] == null
+          ? Duration.zero
+          : Duration(milliseconds: json['transitionOutMs'] as int),
     );
   }
 
   @override
-  List<Object?> get props => [id, media, trimStart, trimEnd, speed];
+  List<Object?> get props => [
+    id,
+    media,
+    trimStart,
+    trimEnd,
+    speed,
+    transitionOut,
+  ];
 }
 
 class ImageClip extends TimelineMediaClip {
@@ -142,6 +160,7 @@ class ImageClip extends TimelineMediaClip {
     required this.media,
     this.displayDuration = kDefaultImageClipDuration,
     this.speed = 1.0,
+    this.transitionOut = Duration.zero,
   });
 
   @override
@@ -151,6 +170,7 @@ class ImageClip extends TimelineMediaClip {
   final Duration displayDuration;
   @override
   final double speed;
+  final Duration transitionOut;
 
   @override
   Duration get trimmedDuration {
@@ -171,6 +191,7 @@ class ImageClip extends TimelineMediaClip {
       ),
       displayDuration: span == Duration.zero ? kDefaultImageClipDuration : span,
       speed: clip.speed,
+      transitionOut: clip.transitionOut,
     );
   }
 
@@ -184,6 +205,7 @@ class ImageClip extends TimelineMediaClip {
       trimEnd: displayDuration,
       speed: speed,
       kind: TimelineClipKind.image,
+      transitionOut: transitionOut,
     );
   }
 
@@ -192,12 +214,14 @@ class ImageClip extends TimelineMediaClip {
     MediaRef? media,
     Duration? displayDuration,
     double? speed,
+    Duration? transitionOut,
   }) {
     return ImageClip(
       id: id ?? this.id,
       media: media ?? this.media,
       displayDuration: displayDuration ?? this.displayDuration,
       speed: speed ?? this.speed,
+      transitionOut: transitionOut ?? this.transitionOut,
     );
   }
 
@@ -208,6 +232,8 @@ class ImageClip extends TimelineMediaClip {
     'media': media.toJson(),
     'displayDurationMs': displayDuration.inMilliseconds,
     'speed': speed,
+    if (transitionOut > Duration.zero)
+      'transitionOutMs': transitionOut.inMilliseconds,
   };
 
   factory ImageClip.fromJson(Map<String, dynamic> json) {
@@ -223,9 +249,12 @@ class ImageClip extends TimelineMediaClip {
             kDefaultImageClipDuration.inMilliseconds,
       ),
       speed: (json['speed'] as num?)?.toDouble() ?? 1.0,
+      transitionOut: json['transitionOutMs'] == null
+          ? Duration.zero
+          : Duration(milliseconds: json['transitionOutMs'] as int),
     );
   }
 
   @override
-  List<Object?> get props => [id, media, displayDuration, speed];
+  List<Object?> get props => [id, media, displayDuration, speed, transitionOut];
 }

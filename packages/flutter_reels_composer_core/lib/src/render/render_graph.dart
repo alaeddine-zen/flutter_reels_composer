@@ -7,6 +7,7 @@ import '../domain/project/project_document.dart';
 import '../domain/project/visual_layer.dart';
 import '../domain/timeline/clip.dart';
 import '../domain/timeline/timeline.dart';
+import '../domain/timeline/timeline_ops.dart';
 import 'color_grade.dart';
 
 /// One evaluated clip on the composed timeline.
@@ -21,6 +22,8 @@ class RenderVideoSegment extends Equatable {
     required this.timelineStart,
     required this.timelineDuration,
     this.isImage = false,
+    this.fadeIn = Duration.zero,
+    this.transitionOut = Duration.zero,
   });
 
   final String clipId;
@@ -32,6 +35,12 @@ class RenderVideoSegment extends Equatable {
   final Duration timelineStart;
   final Duration timelineDuration;
   final bool isImage;
+
+  /// Fade-in from the previous clip's [transitionOut] (dip from black).
+  final Duration fadeIn;
+
+  /// Fade-out at the end of this segment (dip to black).
+  final Duration transitionOut;
 
   Duration get sourceSpan {
     final raw = trimEnd - trimStart;
@@ -59,6 +68,8 @@ class RenderVideoSegment extends Equatable {
     timelineStart,
     timelineDuration,
     isImage,
+    fadeIn,
+    transitionOut,
   ];
 }
 
@@ -124,7 +135,14 @@ class RenderGraph extends Equatable {
     final timeline = Timeline.fromDocument(project);
     final segments = <RenderVideoSegment>[];
     var cursor = Duration.zero;
+    var incomingFade = Duration.zero;
     for (final clip in timeline.mediaClips) {
+      final rawOut = switch (clip) {
+        VideoClip(:final transitionOut) => transitionOut,
+        ImageClip(:final transitionOut) => transitionOut,
+      };
+      final fadeOut = clampFade(rawOut, clip.trimmedDuration);
+      final fadeIn = clampFade(incomingFade, clip.trimmedDuration);
       final segment = switch (clip) {
         VideoClip() => RenderVideoSegment(
           clipId: clip.id,
@@ -135,6 +153,8 @@ class RenderGraph extends Equatable {
           speed: clip.speed,
           timelineStart: cursor,
           timelineDuration: clip.trimmedDuration,
+          fadeIn: fadeIn,
+          transitionOut: fadeOut,
         ),
         ImageClip() => RenderVideoSegment(
           clipId: clip.id,
@@ -146,10 +166,13 @@ class RenderGraph extends Equatable {
           timelineStart: cursor,
           timelineDuration: clip.trimmedDuration,
           isImage: true,
+          fadeIn: fadeIn,
+          transitionOut: fadeOut,
         ),
       };
       segments.add(segment);
       cursor += segment.timelineDuration;
+      incomingFade = fadeOut;
     }
 
     RenderDuet? duet;
@@ -201,6 +224,20 @@ class RenderGraph extends Equatable {
       for (final layer in stickerOverlays)
         if (layer.visibleAt(position)) layer,
     ];
+  }
+
+  /// Dip-to-black opacity of the active segment at [position].
+  double fadeOpacityAt(Duration position) {
+    final segment = segmentAt(position);
+    if (segment == null) return 1.0;
+    var local = position - segment.timelineStart;
+    if (position >= duration) local = segment.timelineDuration;
+    return clipFadeOpacity(
+      localTime: local,
+      clipDuration: segment.timelineDuration,
+      fadeIn: segment.fadeIn,
+      fadeOut: segment.transitionOut,
+    );
   }
 
   @override

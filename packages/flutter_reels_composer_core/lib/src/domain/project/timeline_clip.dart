@@ -12,6 +12,7 @@ class TimelineClip extends Equatable {
     Duration? trimEnd,
     this.speed = 1.0,
     this.kind = TimelineClipKind.video,
+    this.transitionOut = Duration.zero,
   }) : trimEnd = trimEnd ?? sourceDuration;
 
   final String id;
@@ -21,6 +22,11 @@ class TimelineClip extends Equatable {
   final Duration trimEnd;
   final double speed;
   final TimelineClipKind kind;
+
+  /// Fade at the end of this clip (and matching fade-in on the next).
+  /// [Duration.zero] means a hard cut. Preview and FFmpeg both use a dip-to-black
+  /// fade — not an overlapping crossfade (that would need two decoders).
+  final Duration transitionOut;
 
   Duration get trimmedDuration {
     final raw = sourceSpan;
@@ -42,6 +48,7 @@ class TimelineClip extends Equatable {
     Duration? trimEnd,
     double? speed,
     TimelineClipKind? kind,
+    Duration? transitionOut,
   }) {
     return TimelineClip(
       id: id ?? this.id,
@@ -51,6 +58,7 @@ class TimelineClip extends Equatable {
       trimEnd: trimEnd ?? this.trimEnd,
       speed: speed ?? this.speed,
       kind: kind ?? this.kind,
+      transitionOut: transitionOut ?? this.transitionOut,
     );
   }
 
@@ -62,6 +70,8 @@ class TimelineClip extends Equatable {
     'trimEndMs': trimEnd.inMilliseconds,
     'speed': speed,
     'kind': kind.name,
+    if (transitionOut > Duration.zero)
+      'transitionOutMs': transitionOut.inMilliseconds,
   };
 
   factory TimelineClip.fromJson(Map<String, dynamic> json) {
@@ -79,6 +89,9 @@ class TimelineClip extends Equatable {
               (k) => k.name == kindName,
               orElse: () => TimelineClipKind.video,
             ),
+      transitionOut: json['transitionOutMs'] == null
+          ? Duration.zero
+          : Duration(milliseconds: json['transitionOutMs'] as int),
     );
   }
 
@@ -91,5 +104,6 @@ class TimelineClip extends Equatable {
     trimEnd,
     speed,
     kind,
+    transitionOut,
   ];
 }

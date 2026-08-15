@@ -6,6 +6,50 @@ const kMinClipPiece = Duration(milliseconds: 120);
 /// Default snap window on the composition timeline.
 const kDefaultSnapWindow = Duration(milliseconds: 100);
 
+/// Dip-to-black fade applied at a clip's outgoing edge (and matching fade-in
+/// on the next clip). Not an overlapping crossfade.
+const kDefaultClipFade = Duration(milliseconds: 300);
+
+/// Caps a fade so it cannot exceed half the clip (avoids overlapping in/out).
+Duration clampFade(Duration fade, Duration clipDuration) {
+  if (fade <= Duration.zero || clipDuration <= Duration.zero) {
+    return Duration.zero;
+  }
+  final max = Duration(microseconds: clipDuration.inMicroseconds ~/ 2);
+  if (max < const Duration(milliseconds: 40)) return Duration.zero;
+  return fade > max ? max : fade;
+}
+
+/// Opacity of a clip at [localTime] (0 at the clip start).
+///
+/// [fadeIn] comes from the previous clip's [TimelineClip.transitionOut].
+/// [fadeOut] is this clip's own `transitionOut`.
+double clipFadeOpacity({
+  required Duration localTime,
+  required Duration clipDuration,
+  Duration fadeIn = Duration.zero,
+  Duration fadeOut = Duration.zero,
+}) {
+  if (clipDuration <= Duration.zero) return 1.0;
+  var t = localTime;
+  if (t.isNegative) t = Duration.zero;
+  if (t > clipDuration) t = clipDuration;
+
+  var opacity = 1.0;
+  final fadeInClamped = clampFade(fadeIn, clipDuration);
+  final fadeOutClamped = clampFade(fadeOut, clipDuration);
+  if (fadeInClamped > Duration.zero && t < fadeInClamped) {
+    opacity = t.inMicroseconds / fadeInClamped.inMicroseconds;
+  }
+  if (fadeOutClamped > Duration.zero) {
+    final remaining = clipDuration - t;
+    if (remaining < fadeOutClamped) {
+      opacity *= remaining.inMicroseconds / fadeOutClamped.inMicroseconds;
+    }
+  }
+  return opacity.clamp(0.0, 1.0);
+}
+
 /// Snap [value] onto the nearest [targets] if within [window].
 Duration snapDuration(
   Duration value, {
@@ -75,7 +119,7 @@ int? clipIndexAt(List<TimelineClip> clips, Duration at) {
       Duration(microseconds: (local.inMicroseconds * clip.speed).round());
   if (sourceAt <= clip.trimStart || sourceAt >= clip.trimEnd) return null;
   return (
-    left: clip.copyWith(trimEnd: sourceAt),
+    left: clip.copyWith(trimEnd: sourceAt, transitionOut: Duration.zero),
     right: clip.copyWith(id: newClipId, trimStart: sourceAt),
   );
 }

@@ -9,6 +9,7 @@ import 'duet_layout.dart';
 import 'effect_instance.dart';
 import 'project_document.dart';
 import 'timeline_clip.dart';
+import 'video_settings.dart';
 import 'visual_layer.dart';
 
 sealed class ProjectMutation {
@@ -141,6 +142,21 @@ class SetDuetLayoutMutation extends ProjectMutation {
   final String? parentVideoPath;
 }
 
+class SetVideoSettingsMutation extends ProjectMutation {
+  const SetVideoSettingsMutation(this.settings);
+  final VideoSettings settings;
+}
+
+/// Dip-to-black fade at the end of [clipId]. [Duration.zero] is a hard cut.
+class SetClipTransitionMutation extends ProjectMutation {
+  const SetClipTransitionMutation({
+    required this.clipId,
+    required this.transitionOut,
+  });
+  final String clipId;
+  final Duration transitionOut;
+}
+
 ProjectDocument applyProjectMutation(
   ProjectDocument project,
   ProjectMutation mutation,
@@ -249,7 +265,7 @@ ProjectDocument applyProjectMutation(
           .where((t) => t.kind != AudioTrackKind.music)
           .map(
             (t) => t.kind == AudioTrackKind.original
-                ? t.copyWith(volume: originalVolume)
+                ? t.copyWith(volume: originalVolume.clamp(0.0, 1.0))
                 : t,
           )
           .toList();
@@ -261,7 +277,7 @@ ProjectDocument applyProjectMutation(
             kind: AudioTrackKind.music,
             musicId: musicId,
             sourcePath: sourcePath,
-            volume: volume,
+            volume: volume.clamp(0.0, 1.0),
             startOffset:
                 startOffset ?? previousMusic?.startOffset ?? Duration.zero,
           ),
@@ -382,6 +398,22 @@ ProjectDocument applyProjectMutation(
               if (parentVideoPath case final String path)
                 'parentVideoPath': path,
             },
+          )
+          .touch();
+    case SetVideoSettingsMutation(:final settings):
+      return project.copyWith(settings: settings).touch();
+    case SetClipTransitionMutation(:final clipId, :final transitionOut):
+      var fade = transitionOut;
+      if (fade.isNegative) fade = Duration.zero;
+      const maxFade = Duration(seconds: 1);
+      if (fade > maxFade) fade = maxFade;
+      return project
+          .copyWith(
+            clips: project.clips
+                .map(
+                  (c) => c.id == clipId ? c.copyWith(transitionOut: fade) : c,
+                )
+                .toList(),
           )
           .touch();
   }

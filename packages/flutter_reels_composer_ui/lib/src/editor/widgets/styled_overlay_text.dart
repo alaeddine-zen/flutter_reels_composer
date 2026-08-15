@@ -30,6 +30,9 @@ class StyledOverlayText extends StatelessWidget {
     Widget child = Text(
       layer.text ?? '',
       textAlign: TextAlign.center,
+      textDirection: textLooksRtl(layer.text ?? '')
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       style: style,
     );
 

@@ -96,6 +96,20 @@ class _ClipTimelineState extends State<ClipTimeline> {
     widget.onSplit?.call();
   }
 
+  Future<void> _toggleFade() async {
+    final controller = widget.controller;
+    if (controller == null) return;
+    final index = _selectedIndex ?? clipIndexAt(_clips, widget.position);
+    if (index == null) return;
+    final clip = _clips[index];
+    final next = clip.transitionOut > Duration.zero
+        ? Duration.zero
+        : kDefaultClipFade;
+    await controller.apply(
+      SetClipTransitionMutation(clipId: clip.id, transitionOut: next),
+    );
+  }
+
   Future<void> _deleteSelected() async {
     final controller = widget.controller;
     final index = _selectedIndex;
@@ -195,6 +209,10 @@ class _ClipTimelineState extends State<ClipTimeline> {
             ) !=
             null;
 
+    final fadeIndex = _selectedIndex ?? clipIndexAt(_clips, widget.position);
+    final fadeOn =
+        fadeIndex != null && _clips[fadeIndex].transitionOut > Duration.zero;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -209,8 +227,11 @@ class _ClipTimelineState extends State<ClipTimeline> {
               widget.canDelete &&
               _clips.length > 1 &&
               _selectedIndex != null,
+          fadeOn: fadeOn,
+          canFade: editable,
           onSplit: () => unawaited(_split()),
           onDelete: () => unawaited(_deleteSelected()),
+          onFade: () => unawaited(_toggleFade()),
           onZoomIn: () => setState(() => _zoom = (_zoom * 1.35).clamp(0.4, 8)),
           onZoomOut: () => setState(() => _zoom = (_zoom / 1.35).clamp(0.4, 8)),
         ),
@@ -317,8 +338,11 @@ class _Toolbar extends StatelessWidget {
     required this.duration,
     required this.canSplit,
     required this.canDelete,
+    required this.fadeOn,
+    required this.canFade,
     required this.onSplit,
     required this.onDelete,
+    required this.onFade,
     required this.onZoomIn,
     required this.onZoomOut,
   });
@@ -329,8 +353,11 @@ class _Toolbar extends StatelessWidget {
   final Duration duration;
   final bool canSplit;
   final bool canDelete;
+  final bool fadeOn;
+  final bool canFade;
   final VoidCallback onSplit;
   final VoidCallback onDelete;
+  final VoidCallback onFade;
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
 
@@ -358,6 +385,20 @@ class _Toolbar extends StatelessWidget {
               Icons.delete_outline,
               size: 18,
               color: canDelete ? Colors.white : Colors.white24,
+            ),
+          ),
+          IconButton(
+            key: const Key('timeline-fade'),
+            tooltip: l10n.text('fade'),
+            onPressed: canFade ? onFade : null,
+            icon: Icon(
+              Icons.tonality,
+              size: 18,
+              color: !canFade
+                  ? Colors.white24
+                  : fadeOn
+                  ? theme.accent
+                  : Colors.white70,
             ),
           ),
           const Spacer(),
@@ -504,6 +545,7 @@ class _ClipCell extends StatelessWidget {
                   height: 56,
                   count: count,
                   accent: theme.accent,
+                  stillImage: clip.kind == TimelineClipKind.image,
                 ),
               ),
             ),

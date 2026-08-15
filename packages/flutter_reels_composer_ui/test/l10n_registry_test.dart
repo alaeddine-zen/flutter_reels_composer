@@ -29,6 +29,8 @@ void main() {
     expect(fr.text('undo'), 'Annuler');
     expect(en.text('redo'), 'Redo');
     expect(en.text('splitClip'), 'Split clip');
+    expect(en.text('fade'), 'Fade');
+    expect(fr.text('fade'), 'Fondu');
     expect(fr.text('newText'), 'Nouveau');
     expect(en.toolLabel(ComposerFeature.trim), 'Trim');
   });

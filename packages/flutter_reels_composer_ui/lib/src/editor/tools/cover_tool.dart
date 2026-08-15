@@ -77,6 +77,7 @@ class CoverToolPanel extends StatelessWidget {
                   height: 56,
                   count: 10,
                   accent: theme.accent,
+                  stillImage: mapped.clip.kind == TimelineClipKind.image,
                   range: RangeValues(
                     ((mapped.sourceAt - mapped.clip.trimStart).inMilliseconds /
                             spanMs)
@@ -121,6 +122,49 @@ class CoverToolPanel extends StatelessWidget {
                 style: TextStyle(color: theme.foreground),
               ),
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Export',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: theme.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              for (final preset in const [
+                (label: '480', settings: VideoSettings.sd480),
+                (label: '720', settings: VideoSettings.hd720),
+                (label: '1080', settings: VideoSettings.fhd1080),
+              ])
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text(preset.label),
+                      selected:
+                          project.settings.width == preset.settings.width &&
+                          project.settings.height == preset.settings.height,
+                      selectedColor: theme.accent,
+                      labelStyle: TextStyle(
+                        color:
+                            project.settings.width == preset.settings.width &&
+                                project.settings.height ==
+                                    preset.settings.height
+                            ? Colors.white
+                            : theme.foreground,
+                      ),
+                      onSelected: (_) {
+                        controller.apply(
+                          SetVideoSettingsMutation(
+                            preset.settings.copyWith(fps: project.settings.fps),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

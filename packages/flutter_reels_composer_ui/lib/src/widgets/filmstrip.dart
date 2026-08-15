@@ -16,6 +16,7 @@ class Filmstrip extends StatefulWidget {
     this.range,
     this.accent,
     this.frameExtractor = const NoopFrameExtractor(),
+    this.stillImage = false,
   });
 
   final String sourcePath;
@@ -28,6 +29,9 @@ class Filmstrip extends StatefulWidget {
   final RangeValues? range;
   final Color? accent;
   final FrameExtractorPort frameExtractor;
+
+  /// Tile [sourcePath] itself (photo clips) instead of extracting video frames.
+  final bool stillImage;
 
   @override
   State<Filmstrip> createState() => _FilmstripState();
@@ -50,12 +54,22 @@ class _FilmstripState extends State<Filmstrip> {
         oldWidget.start != widget.start ||
         oldWidget.end != widget.end ||
         oldWidget.count != widget.count ||
-        oldWidget.frameExtractor != widget.frameExtractor) {
+        oldWidget.frameExtractor != widget.frameExtractor ||
+        oldWidget.stillImage != widget.stillImage) {
       _load();
     }
   }
 
   Future<void> _load() async {
+    if (widget.stillImage) {
+      if (mounted) {
+        setState(() {
+          _frames = const [];
+          _loading = false;
+        });
+      }
+      return;
+    }
     setState(() => _loading = true);
     final frames = await widget.frameExtractor.extract(
       sourcePath: widget.sourcePath,
@@ -89,6 +103,21 @@ class _FilmstripState extends State<Filmstrip> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (widget.stillImage)
+              Row(
+                children: List.generate(
+                  widget.count,
+                  (_) => Expanded(
+                    child: Image.file(
+                      File(widget.sourcePath),
+                      fit: BoxFit.cover,
+                      height: widget.height,
+                      errorBuilder: (_, _, _) =>
+                          const ColoredBox(color: Colors.white12),
+                    ),
                   ),
                 ),
               )

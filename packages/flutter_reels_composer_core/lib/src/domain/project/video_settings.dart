@@ -17,6 +17,35 @@ class VideoSettings extends Equatable {
 
   static const vertical9x16 = VideoSettings();
 
+  /// 9:16 ladders used by the editor export quality chips.
+  static const sd480 = VideoSettings(
+    width: 480,
+    height: 854,
+    bitrate: 1_500_000,
+  );
+  static const hd720 = VideoSettings(
+    width: 720,
+    height: 1280,
+    bitrate: 3_500_000,
+  );
+  static const fhd1080 = VideoSettings();
+
+  VideoSettings copyWith({
+    int? width,
+    int? height,
+    int? fps,
+    int? bitrate,
+    double? aspectRatio,
+  }) {
+    return VideoSettings(
+      width: width ?? this.width,
+      height: height ?? this.height,
+      fps: fps ?? this.fps,
+      bitrate: bitrate ?? this.bitrate,
+      aspectRatio: aspectRatio ?? this.aspectRatio,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'width': width,
     'height': height,

@@ -137,12 +137,12 @@ class FakeComposerEngine implements ComposerEngine {
       onProgress(
         const ExportProgress(phase: ExportPhase.preparing, progress: 0.1),
       );
-      if (cancelToken.isCancelled) throw StateError('Export cancelled');
+      if (cancelToken.isCancelled) throw const ExportCancelledException();
       if (failExport) throw StateError('Fake export failed');
       if (exportDelay > Duration.zero) {
         await Future<void>.delayed(exportDelay);
       }
-      if (cancelToken.isCancelled) throw StateError('Export cancelled');
+      if (cancelToken.isCancelled) throw const ExportCancelledException();
       final dir = Directory.systemTemp.createTempSync('reels_fake_export_');
       final video = File('${dir.path}/reel.mp4')
         ..writeAsBytesSync(const [0, 0, 0, 0]);

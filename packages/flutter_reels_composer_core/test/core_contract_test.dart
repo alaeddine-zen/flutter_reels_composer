@@ -236,6 +236,59 @@ void main() {
       await engine.dispose();
     });
   });
+
+  group('prod-ready mutations', () {
+    test('SetVideoSettingsMutation stores 720p ladder', () {
+      var project = ProjectDocument.fromClip(
+        clip: const TimelineClip(
+          id: 'c1',
+          sourcePath: '/tmp/a.mp4',
+          sourceDuration: Duration(seconds: 2),
+        ),
+      );
+      project = applyProjectMutation(
+        project,
+        const SetVideoSettingsMutation(VideoSettings.hd720),
+      );
+      expect(project.settings.width, 720);
+      expect(project.settings.height, 1280);
+      expect(project.settings.bitrate, 3_500_000);
+    });
+
+    test('SetClipTransitionMutation clamps and dual-writes timeline', () {
+      var project = ProjectDocument.fromClip(
+        clip: const TimelineClip(
+          id: 'c1',
+          sourcePath: '/tmp/a.mp4',
+          sourceDuration: Duration(seconds: 4),
+        ),
+      );
+      project = applyProjectMutation(
+        project,
+        const SetClipTransitionMutation(
+          clipId: 'c1',
+          transitionOut: Duration(seconds: 8),
+        ),
+      );
+      expect(project.clips.single.transitionOut, const Duration(seconds: 1));
+      final json = project.toJson();
+      expect((json['clips'] as List).first['transitionOutMs'], 1000);
+      final restored = ProjectDocument.fromJson(json);
+      expect(restored.clips.single.transitionOut, const Duration(seconds: 1));
+      expect(
+        (Timeline.fromDocument(restored).mediaClips.single as VideoClip)
+            .transitionOut,
+        const Duration(seconds: 1),
+      );
+    });
+
+    test('textLooksRtl detects Hebrew and Arabic', () {
+      expect(textLooksRtl('Hello'), isFalse);
+      expect(textLooksRtl('שלום'), isTrue);
+      expect(textLooksRtl('مرحبا'), isTrue);
+      expect(textLooksRtl('mix مرحبا ok'), isTrue);
+    });
+  });
 }
 
 class _StubTool implements EditorTool {

@@ -1,3 +1,8 @@
+## Unreleased
+
+- Production harden: preview/export canvas cover parity, dip-to-black fade,
+  export quality ladders, autosave, RTL text, typed export errors.
+
 ## 0.2.0
 
 - Add `FlutterReelsComposer.open` with injectable `ComposerConfig`.

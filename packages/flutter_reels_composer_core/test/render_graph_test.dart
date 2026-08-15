@@ -152,5 +152,37 @@ void main() {
       );
       expect(graph.colorGrade.isActive, isFalse);
     });
+
+    test('fadeOpacityAt dips to black at the outgoing edge', () {
+      final project = ProjectDocument(
+        id: 'p',
+        settings: VideoSettings.vertical9x16,
+        clips: const [
+          TimelineClip(
+            id: 'a',
+            sourcePath: '/tmp/a.mp4',
+            sourceDuration: Duration(seconds: 2),
+            transitionOut: Duration(milliseconds: 400),
+          ),
+          TimelineClip(
+            id: 'b',
+            sourcePath: '/tmp/b.mp4',
+            sourceDuration: Duration(seconds: 2),
+          ),
+        ],
+      );
+      final graph = RenderGraph.fromProject(project);
+      expect(
+        graph.segments[0].transitionOut,
+        const Duration(milliseconds: 400),
+      );
+      expect(graph.segments[1].fadeIn, const Duration(milliseconds: 400));
+      expect(graph.fadeOpacityAt(Duration.zero), 1.0);
+      expect(graph.fadeOpacityAt(const Duration(seconds: 2)), 0.0);
+      expect(
+        graph.fadeOpacityAt(const Duration(milliseconds: 2200)),
+        closeTo(0.5, 0.001),
+      );
+    });
   });
 }

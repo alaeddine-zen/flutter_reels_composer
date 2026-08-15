@@ -48,6 +48,7 @@ class _EditorPageState extends State<EditorPage> {
   late final ComposerController _controller;
   late final EditorToolRegistry _registry;
   late final ComposerToolL10n _l10n;
+  Timer? _autosaveTimer;
 
   bool get _previewReady => _preview != null;
 
@@ -68,6 +69,21 @@ class _EditorPageState extends State<EditorPage> {
     // Start with no panel open — TikTok opens tools on demand.
     _selectedToolId = null;
     unawaited(_bootstrap());
+    final interval = widget.config.autosaveInterval;
+    if (interval > Duration.zero) {
+      _autosaveTimer = Timer.periodic(interval, (_) {
+        unawaited(_autosaveDraft());
+      });
+    }
+  }
+
+  Future<void> _autosaveDraft() async {
+    if (!mounted || _exporting) return;
+    try {
+      await _drafts.save(widget.engine.project);
+    } catch (error) {
+      debugPrint('EditorPage: autosave failed: $error');
+    }
   }
 
   Future<void> _bootstrap() async {
@@ -86,6 +102,7 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   void dispose() {
+    _autosaveTimer?.cancel();
     final session = _exportSession;
     _exportSession = null;
     if (session != null) {
@@ -256,7 +273,7 @@ class _EditorPageState extends State<EditorPage> {
           properties: {'error': e.toString()},
         ),
       );
-      if (mounted && !e.toString().contains('cancelled')) {
+      if (mounted && e is! ExportCancelledException) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${_l10n.text('exportFailed')}: $e')),
         );

@@ -68,6 +68,56 @@ void main() {
     });
   });
 
+  group('clipFadeOpacity', () {
+    test('hard cut stays fully opaque', () {
+      expect(
+        clipFadeOpacity(
+          localTime: const Duration(milliseconds: 500),
+          clipDuration: const Duration(seconds: 2),
+        ),
+        1.0,
+      );
+    });
+
+    test('fades out over the last window', () {
+      expect(
+        clipFadeOpacity(
+          localTime: const Duration(seconds: 2),
+          clipDuration: const Duration(seconds: 2),
+          fadeOut: const Duration(milliseconds: 400),
+        ),
+        0.0,
+      );
+      expect(
+        clipFadeOpacity(
+          localTime: const Duration(milliseconds: 1800),
+          clipDuration: const Duration(seconds: 2),
+          fadeOut: const Duration(milliseconds: 400),
+        ),
+        closeTo(0.5, 0.001),
+      );
+    });
+
+    test('next clip fades in from the previous transitionOut', () {
+      expect(
+        clipFadeOpacity(
+          localTime: Duration.zero,
+          clipDuration: const Duration(seconds: 2),
+          fadeIn: const Duration(milliseconds: 400),
+        ),
+        0.0,
+      );
+      expect(
+        clipFadeOpacity(
+          localTime: const Duration(milliseconds: 200),
+          clipDuration: const Duration(seconds: 2),
+          fadeIn: const Duration(milliseconds: 400),
+        ),
+        closeTo(0.5, 0.001),
+      );
+    });
+  });
+
   group('splitLegacyClip / SplitClipMutation', () {
     test('splits a clip at the playhead and preserves source trim', () {
       final clip = _clip(
@@ -93,6 +143,8 @@ void main() {
         split.left.trimmedDuration + split.right.trimmedDuration,
         clip.trimmedDuration,
       );
+      expect(split.left.transitionOut, Duration.zero);
+      expect(split.right.transitionOut, Duration.zero);
     });
 
     test('accounts for speed when mapping composition time to source', () {
@@ -124,6 +176,22 @@ void main() {
         ),
         isNull,
       );
+    });
+
+    test('keeps dip-to-black fade on the right-hand piece only', () {
+      final clip = _clip(
+        id: 'a',
+        source: const Duration(seconds: 6),
+      ).copyWith(transitionOut: kDefaultClipFade);
+      final split = splitLegacyClip(
+        clip: clip,
+        prefix: Duration.zero,
+        at: const Duration(seconds: 2),
+        newClipId: 'b',
+      );
+      expect(split, isNotNull);
+      expect(split!.left.transitionOut, Duration.zero);
+      expect(split.right.transitionOut, kDefaultClipFade);
     });
   });
 

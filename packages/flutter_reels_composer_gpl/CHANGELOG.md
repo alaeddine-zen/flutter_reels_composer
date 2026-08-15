@@ -1,3 +1,7 @@
+## Unreleased
+
+- Same production harden as the MIT facade (canvas cover, fade, typed errors).
+
 ## 0.2.0
 
 - Add `FlutterReelsComposerGpl.open` backed by x264-enabled FFmpeg.

@@ -16,6 +16,12 @@ is unchanged.
 - Editor undo/redo: tools call `ComposerController.apply` / `applyLive` ;
   gestures (trim, intensity, drag texte) coalescent en une entrée d'historique
 - Timeline éditeur : split, poignées trim/roll, snap, zoom
+- Parité preview = export : canvas **cover** (crop) sur tous les segments,
+  y compris le cas 1 clip ; overlays preview via `RenderGraph`
+- Fondu dip-to-black honnête (pas de crossfade chevauchant)
+- Presets export 480 / 720 / 1080, autosave éditeur, texte RTL
+- Photos galerie → `ImageClip` (sans encode FFmpeg à l’import)
+- Erreurs d’export typées ; `file_picker` < 11 pour le CI Android
 
 ## 0.2.0
 

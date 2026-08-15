@@ -91,6 +91,7 @@ class ComposerL10n implements ComposerToolL10n {
     'deleteClip': 'Delete clip',
     'zoomIn': 'Zoom in',
     'zoomOut': 'Zoom out',
+    'fade': 'Fade',
   };
 
   static const _fr = {
@@ -173,6 +174,7 @@ class ComposerL10n implements ComposerToolL10n {
     'deleteClip': 'Supprimer le clip',
     'zoomIn': 'Zoom avant',
     'zoomOut': 'Zoom arrière',
+    'fade': 'Fondu',
   };
 
   static const _ar = {
@@ -253,6 +255,7 @@ class ComposerL10n implements ComposerToolL10n {
     'deleteClip': 'حذف المقطع',
     'zoomIn': 'تكبير',
     'zoomOut': 'تصغير',
+    'fade': 'تلاشي',
   };
 
   @override
