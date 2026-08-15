@@ -1,6 +1,6 @@
 # flutter_reels_composer
 
-[![CI](https://github.com/allochat/flutter_reels_composer/actions/workflows/ci.yml/badge.svg)](https://github.com/allochat/flutter_reels_composer/actions/workflows/ci.yml)
+[![CI](https://github.com/alaeddine-zen/flutter_reels_composer/actions/workflows/ci.yml/badge.svg)](https://github.com/alaeddine-zen/flutter_reels_composer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Batteries-included TikTok/Snap-style video composer for **Android and iOS**.
@@ -26,7 +26,7 @@ theme, l10n, ports, `EditorTool` / `defaultEditorTools`, `ComposerNavigator`.
 import `package:flutter_reels_composer_ui/pages.dart`.
 
 **Not on pub.dev yet** (0.2.0 is developed in this monorepo). Install from
-Git or a path — see the [repository README](https://github.com/allochat/flutter_reels_composer#quick-start).
+Git or a path — see the [repository README](https://github.com/alaeddine-zen/flutter_reels_composer#quick-start).
 
 ## License split
 
@@ -38,7 +38,7 @@ For x264, use [`flutter_reels_composer_gpl`](../flutter_reels_composer_gpl) and
 
 ## Docs
 
-- [Getting started](https://github.com/allochat/flutter_reels_composer/blob/main/docs/getting-started.md)
-- [ComposerConfig](https://github.com/allochat/flutter_reels_composer/blob/main/docs/api/composer-config.md)
-- [Permissions](https://github.com/allochat/flutter_reels_composer/blob/main/docs/permissions.md)
-- [Licensing](https://github.com/allochat/flutter_reels_composer/blob/main/docs/licensing.md)
+- [Getting started](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/getting-started.md)
+- [ComposerConfig](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/api/composer-config.md)
+- [Permissions](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/permissions.md)
+- [Licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md)

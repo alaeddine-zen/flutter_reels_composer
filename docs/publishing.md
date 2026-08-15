@@ -37,7 +37,7 @@ Also:
 
 - `version` in `pubspec.yaml` matches `CHANGELOG.md`
 - `homepage` / `repository` / `issue_tracker` point at
-  https://github.com/allochat/flutter_reels_composer
+  https://github.com/alaeddine-zen/flutter_reels_composer
 - README states Android + iOS only
 - MIT facade README links LGPL vs GPL docs
 - `pubspec_overrides.yaml` is for local dev; pub.dev uses hosted deps

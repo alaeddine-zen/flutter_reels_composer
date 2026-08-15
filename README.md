@@ -1,6 +1,6 @@
 # Flutter Reels Composer
 
-[![CI](https://github.com/allochat/flutter_reels_composer/actions/workflows/ci.yml/badge.svg)](https://github.com/allochat/flutter_reels_composer/actions/workflows/ci.yml)
+[![CI](https://github.com/alaeddine-zen/flutter_reels_composer/actions/workflows/ci.yml/badge.svg)](https://github.com/alaeddine-zen/flutter_reels_composer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Optional export: GPL-3.0](https://img.shields.io/badge/optional%20export-GPL--3.0-red.svg)](packages/flutter_reels_composer_gpl/LICENSE)
 [![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20iOS-blue.svg)](#requirements)
@@ -34,7 +34,7 @@ Product screenshots are not in the repository yet. Drop PNG/WebP files into
 dependencies:
   flutter_reels_composer:
     git:
-      url: https://github.com/allochat/flutter_reels_composer.git
+      url: https://github.com/alaeddine-zen/flutter_reels_composer.git
       path: packages/flutter_reels_composer
       ref: main
 
@@ -42,22 +42,22 @@ dependencies:
 dependency_overrides:
   flutter_reels_composer_core:
     git:
-      url: https://github.com/allochat/flutter_reels_composer.git
+      url: https://github.com/alaeddine-zen/flutter_reels_composer.git
       path: packages/flutter_reels_composer_core
       ref: main
   flutter_reels_composer_ui:
     git:
-      url: https://github.com/allochat/flutter_reels_composer.git
+      url: https://github.com/alaeddine-zen/flutter_reels_composer.git
       path: packages/flutter_reels_composer_ui
       ref: main
   flutter_reels_composer_local:
     git:
-      url: https://github.com/allochat/flutter_reels_composer.git
+      url: https://github.com/alaeddine-zen/flutter_reels_composer.git
       path: packages/flutter_reels_composer_local
       ref: main
   flutter_reels_composer_export_lgpl:
     git:
-      url: https://github.com/allochat/flutter_reels_composer.git
+      url: https://github.com/alaeddine-zen/flutter_reels_composer.git
       path: packages/flutter_reels_composer_export_lgpl
       ref: main
 ```
@@ -339,7 +339,7 @@ their `ComposerFeature`.
 ## Example
 
 ```bash
-git clone https://github.com/allochat/flutter_reels_composer.git
+git clone https://github.com/alaeddine-zen/flutter_reels_composer.git
 cd flutter_reels_composer/example
 flutter pub get
 flutter run

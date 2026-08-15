@@ -8,7 +8,7 @@
 | < 0.2.0 | No |
 
 This project has not yet been published to pub.dev. Security fixes land on
-`main` of [allochat/flutter_reels_composer](https://github.com/allochat/flutter_reels_composer)
+`main` of [alaeddine-zen/flutter_reels_composer](https://github.com/alaeddine-zen/flutter_reels_composer)
 and are tagged with the package version that contains them.
 
 ## Reporting a vulnerability
@@ -16,7 +16,7 @@ and are tagged with the package version that contains them.
 **Do not** open a public GitHub issue for security problems.
 
 Report privately via
-[GitHub Security Advisories](https://github.com/allochat/flutter_reels_composer/security/advisories/new).
+[GitHub Security Advisories](https://github.com/alaeddine-zen/flutter_reels_composer/security/advisories/new).
 
 Please include:
 

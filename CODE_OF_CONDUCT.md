@@ -60,9 +60,9 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement through a
-[private GitHub Security Advisory](https://github.com/allochat/flutter_reels_composer/security/advisories/new)
+[private GitHub Security Advisory](https://github.com/alaeddine-zen/flutter_reels_composer/security/advisories/new)
 or by contacting the maintainers via the
-[repository](https://github.com/allochat/flutter_reels_composer).
+[repository](https://github.com/alaeddine-zen/flutter_reels_composer).
 
 All complaints will be reviewed and investigated promptly and fairly.
 

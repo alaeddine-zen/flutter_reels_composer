@@ -23,6 +23,6 @@ LGPL compliance is the host app’s responsibility.
 
 Do not add this package alongside `flutter_reels_composer_export_gpl`.
 
-Docs: [licensing](https://github.com/allochat/flutter_reels_composer/blob/main/docs/licensing.md)
+Docs: [licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md)
 
 **Not on pub.dev yet.** Version 0.2.0. Source is MIT; binaries are LGPL.

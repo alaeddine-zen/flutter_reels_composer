@@ -12,7 +12,7 @@ and preview.
 Photo-to-video encoding is injectable (`photoClipEncoder`). This package does
 not depend on FFmpeg Kit.
 
-Docs: [engines](https://github.com/allochat/flutter_reels_composer/blob/main/docs/extensions/engines.md) ·
-[permissions](https://github.com/allochat/flutter_reels_composer/blob/main/docs/permissions.md)
+Docs: [engines](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/extensions/engines.md) ·
+[permissions](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/permissions.md)
 
 **Not on pub.dev yet.** Version 0.2.0.

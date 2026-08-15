@@ -22,7 +22,7 @@ That export is `CameraPage`, `GalleryPage`, and `EditorPage`.
 
 No FFmpeg Kit dependency — thumbnails go through `FrameExtractorPort`.
 
-Docs: [editor tools](https://github.com/allochat/flutter_reels_composer/blob/main/docs/extensions/editor-tools.md) ·
-[customization](https://github.com/allochat/flutter_reels_composer/blob/main/docs/customization.md)
+Docs: [editor tools](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/extensions/editor-tools.md) ·
+[customization](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/customization.md)
 
 **Not on pub.dev yet.** Version 0.2.0.

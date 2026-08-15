@@ -1,9 +1,9 @@
 name: flutter_reels_composer_export_lgpl
 description: FFmpeg LGPL export adapter for Flutter Reels Composer.
 version: 0.2.0
-homepage: https://github.com/allochat/flutter_reels_composer
-repository: https://github.com/allochat/flutter_reels_composer
-issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+homepage: https://github.com/alaeddine-zen/flutter_reels_composer
+repository: https://github.com/alaeddine-zen/flutter_reels_composer
+issue_tracker: https://github.com/alaeddine-zen/flutter_reels_composer/issues
 license: MIT
 topics: [video-editor, ffmpeg, reels, export]
 

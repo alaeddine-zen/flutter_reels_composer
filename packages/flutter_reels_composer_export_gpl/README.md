@@ -12,6 +12,6 @@ if you explicitly want this adapter.
 **Never** depend on this package together with
 `flutter_reels_composer` or `flutter_reels_composer_export_lgpl`.
 
-Docs: [licensing](https://github.com/allochat/flutter_reels_composer/blob/main/docs/licensing.md)
+Docs: [licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md)
 
 **Not on pub.dev yet.** Version 0.2.0.

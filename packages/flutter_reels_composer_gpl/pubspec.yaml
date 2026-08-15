@@ -1,9 +1,9 @@
 name: flutter_reels_composer_gpl
 description: GPL batteries-included facade for Flutter Reels Composer with x264 export.
 version: 0.2.0
-homepage: https://github.com/allochat/flutter_reels_composer
-repository: https://github.com/allochat/flutter_reels_composer
-issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+homepage: https://github.com/alaeddine-zen/flutter_reels_composer
+repository: https://github.com/alaeddine-zen/flutter_reels_composer
+issue_tracker: https://github.com/alaeddine-zen/flutter_reels_composer/issues
 license: GPL-3.0
 topics: [video-editor, camera, reels, social-media, ffmpeg]
 

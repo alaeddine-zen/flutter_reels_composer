@@ -12,7 +12,7 @@ stay easy to clone, extend, and review.
 ## Clone and bootstrap
 
 ```bash
-git clone https://github.com/allochat/flutter_reels_composer.git
+git clone https://github.com/alaeddine-zen/flutter_reels_composer.git
 cd flutter_reels_composer
 ```
 

@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/allochat/flutter_reels_composer#documentation
+    url: https://github.com/alaeddine-zen/flutter_reels_composer#documentation
     about: Read the docs before opening an issue.
   - name: Security advisory
-    url: https://github.com/allochat/flutter_reels_composer/security/advisories/new
+    url: https://github.com/alaeddine-zen/flutter_reels_composer/security/advisories/new
     about: Report a vulnerability privately. Do not file a public issue.
