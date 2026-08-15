@@ -56,6 +56,10 @@ class _GalleryPreviewPageState extends State<GalleryPreviewPage> {
   }
 
   Future<void> _initPlayer() async {
+    if (widget.fromPhoto || !widget.media.isVideo) {
+      if (mounted) setState(() => _ready = true);
+      return;
+    }
     setState(() {
       _error = null;
       _ready = false;
@@ -128,6 +132,9 @@ class _GalleryPreviewPageState extends State<GalleryPreviewPage> {
       sourceDuration: _sourceDuration,
       trimStart: trimStart,
       trimEnd: trimEnd,
+      kind: widget.fromPhoto || !widget.media.isVideo
+          ? TimelineClipKind.image
+          : TimelineClipKind.video,
     );
     widget.onConfirm(ProjectDocument.fromClip(clip: clip));
   }
@@ -205,6 +212,15 @@ class _GalleryPreviewPageState extends State<GalleryPreviewPage> {
                                   ),
                                 ],
                               ),
+                            ),
+                          )
+                        : widget.fromPhoto || !widget.media.isVideo
+                        ? SizedBox.expand(
+                            child: Image.file(
+                              File(widget.media.path),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const ColoredBox(color: Colors.white10),
                             ),
                           )
                         : _ready && _controller != null

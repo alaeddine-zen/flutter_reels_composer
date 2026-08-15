@@ -13,6 +13,23 @@ is unchanged.
 - Preview and FFmpeg share `ColorGrade` (4×5 ColorMatrix, not `.cube`)
 - `ExportCapabilitySet` — unsupported ops fail explicitly
 - `FfmpegFilters` in core is deprecated (helpers live in export packages)
+- Editor undo/redo: tools call `ComposerController.apply` / `applyLive` ;
+  gestures (trim, intensity, drag texte) coalescent en une entrée d'historique
+- Timeline éditeur : split, poignées trim/roll, snap, zoom
+- Parité preview = export : canvas **cover** (crop) sur tous les segments,
+  y compris le cas 1 clip ; overlays preview via `RenderGraph`
+- Fondu dip-to-black honnête (pas de crossfade chevauchant)
+- Presets export 480 / 720 / 1080, autosave éditeur, texte RTL
+- Photos galerie → `ImageClip` (sans encode FFmpeg à l’import)
+- Erreurs d’export typées ; `file_picker` < 11 pour le CI Android
+- Preview: chrome éditeur découplé du playhead (~50 ms), `RenderGraph` mis en cache
+- Filmstrips: 8 frames source stables + `CachedFrameExtractor` (LRU, FFmpeg sérialisé)
+- Autosave: skip si `updatedAt` inchangé ; `FileDraftStore` ne recopie pas les médias identiques
+- Export: `executeAsync` complete callback ; `ffmpegEscapePath` (`\`, `"`, `$`, `` ` ``)
+- Horloges preview: resync musique ≥ 120 ms, duet sans seek à chaque tick, prefetch filmstrips
+- Guide [docs/verification.md](docs/verification.md) (tests + checks device)
+- Suppression des chrome factices : waveform musique, Generate captions sans moteur, filmstrip « faux frames »
+- Guide audio [docs/audio.md](docs/audio.md)
 
 ## 0.2.0
 

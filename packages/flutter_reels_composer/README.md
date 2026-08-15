@@ -20,6 +20,10 @@ still-image clips, and **LGPL** FFmpeg export (`mpeg4` default; optional
 `h264_videotoolbox` / `h264_mediacodec`). Your app keeps auth, upload, CDN,
 and moderation.
 
+Editor: undo/redo, multi-clip timeline (split / roll / fade), quality presets
+480 / 720 / 1080, autosave, RTL text. Preview and export share a cover crop
+and `RenderGraph`. Photos import as `ImageClip` stills.
+
 Stable surface: `FlutterReelsComposer.open`, `ComposerConfig`, catalogs,
 theme, l10n, ports, `EditorTool` / `defaultEditorTools`, `ComposerNavigator`.
 `CameraPage` / `GalleryPage` / `EditorPage` are **not** exported here —
@@ -40,5 +44,7 @@ For x264, use [`flutter_reels_composer_gpl`](../flutter_reels_composer_gpl) and
 
 - [Getting started](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/getting-started.md)
 - [ComposerConfig](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/api/composer-config.md)
+- [Performance](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/performance.md)
+- [Audio](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/audio.md)
 - [Permissions](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/permissions.md)
 - [Licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md)

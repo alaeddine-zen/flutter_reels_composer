@@ -72,7 +72,7 @@ Each panel receives:
 
 | Field | Meaning |
 | --- | --- |
-| `controller` | `apply(ProjectMutation)` |
+| `controller` | `apply` / `applyLive` / `endLive` (records undo) |
 | `project` | Current immutable `ProjectDocument` |
 | `preview` | `PreviewPort?` (trim/speed/cover need it) |
 | `l10n` / `theme` / `config` | Host configuration |

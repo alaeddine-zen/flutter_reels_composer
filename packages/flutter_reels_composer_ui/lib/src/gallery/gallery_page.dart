@@ -162,6 +162,9 @@ class _GalleryPageState extends State<GalleryPage>
             sourceDuration: media.duration <= Duration.zero
                 ? const Duration(seconds: 3)
                 : media.duration,
+            kind: media.isVideo
+                ? TimelineClipKind.video
+                : TimelineClipKind.image,
           ),
         );
       }

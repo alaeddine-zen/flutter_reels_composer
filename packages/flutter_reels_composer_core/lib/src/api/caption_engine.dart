@@ -28,11 +28,20 @@ class CaptionCue {
 }
 
 abstract class CaptionEngine {
+  const CaptionEngine();
+
   Future<List<CaptionCue>> transcribe(String mediaPath, {String locale = 'en'});
+
+  /// Whether [transcribe] can return cues. [NullCaptionEngine] is false so the
+  /// UI does not show a Generate action that cannot succeed.
+  bool get canTranscribe => true;
 }
 
-class NullCaptionEngine implements CaptionEngine {
+class NullCaptionEngine extends CaptionEngine {
   const NullCaptionEngine();
+
+  @override
+  bool get canTranscribe => false;
 
   @override
   Future<List<CaptionCue>> transcribe(

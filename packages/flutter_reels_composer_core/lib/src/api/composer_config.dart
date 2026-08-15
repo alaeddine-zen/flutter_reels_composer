@@ -39,6 +39,7 @@ class ComposerConfig {
     this.locale,
     this.l10n,
     this.draftStore,
+    this.autosaveInterval = const Duration(seconds: 8),
   });
 
   final ComposerEngine? engine;
@@ -60,6 +61,9 @@ class ComposerConfig {
   final Locale? locale;
   final ComposerToolL10n? l10n;
   final DraftStore? draftStore;
+
+  /// Periodic editor draft flush. [Duration.zero] disables autosave.
+  final Duration autosaveInterval;
 
   bool get isDuet =>
       parentVideoPath != null &&

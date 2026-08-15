@@ -10,14 +10,14 @@ class SpeedToolPanel extends StatelessWidget {
   const SpeedToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     required this.preview,
     this.onChanged,
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final PreviewPort preview;
   final ValueChanged<double>? onChanged;
@@ -80,7 +80,7 @@ class SpeedToolPanel extends StatelessWidget {
                   selected: (clip.speed - speed).abs() < 0.001,
                   onSelected: (_) async {
                     HapticFeedback.selectionClick();
-                    await engine.applyMutation(
+                    await controller.apply(
                       UpdateClipSpeedMutation(clipId: clip.id, speed: speed),
                     );
                     onChanged?.call(speed);

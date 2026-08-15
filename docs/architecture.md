@@ -47,22 +47,46 @@ frame.
 
 ## Project model
 
-`ProjectDocument` is immutable (JSON schema **v3**). Edits go through
-`ComposerEngine.applyMutation` with a `ProjectMutation`.
+`ProjectDocument` is immutable (JSON schema **v3**). Editor UI edits go
+through `ComposerController.apply` / `applyLive` (undo/redo). The engine
+still applies a `ProjectMutation` underneath.
 
 `Timeline.fromDocument` and `RenderGraph.fromProject` are **derived views** —
 not a second store. Preview and FFmpeg export consume the same graph.
+The editor timeline (`ClipTimeline`) splits, trims and rolls clips through
+`ComposerController`; export concatenates the resulting segments.
 
 Color is a 4×5 `ColorFilter` matrix (`ColorGrade`), applied as
 `ColorFilter.matrix` in preview and `colorchannelmixer` (+ `lutrgb` offsets)
 in FFmpeg. This is **not** `.cube` LUT support.
 
+Preview and export share the same canvas: `BoxFit.cover` in the player and
+`scale=W:H:force_original_aspect_ratio=increase,crop=W:H` in FFmpeg, including
+the single-clip path. Overlay lists come from `RenderGraph.overlaysAt`.
+
+Clip-to-clip **fade** is a sequential dip-to-black (`transitionOut` on the
+outgoing clip, matching fade-in on the next). It is **not** an overlapping
+crossfade (that would need two decoders). FFmpeg uses `fade=t=in|out`.
+
 Export builds an `ExportRecipe` and checks `ExportCapabilitySet` before
 baking. Unsupported operations throw `UnsupportedExportException` instead of
-being dropped.
+being dropped. Missing files throw `MissingClipException`; user cancel throws
+`ExportCancelledException`. Volume is clamped 0–1 like the preview.
 
-FFmpeg helpers (`atempo` / `setpts`) live in the export packages.
-`FfmpegFilters` remaining in core is deprecated.
+`VideoSettings.sd480` / `hd720` / `fhd1080` are the editor quality chips.
+FFmpeg encode uses `settings.width/height/fps/bitrate`.
+
+Gallery photos import as `ImageClip` stills (3 s hold) without an FFmpeg
+round-trip at import time. Preview shows `Image.file`; export loops the still.
+
+`ComposerConfig.autosaveInterval` (default 8 s; `Duration.zero` to disable)
+flushes the draft store without emitting `draftSaved` analytics.
+
+FFmpeg helpers (`atempo` / `setpts` / `canvasCover` / `dipToBlack`) live in
+the export packages. `FfmpegFilters` remaining in core is deprecated.
+`ffmpegEscapePath` is the shared path-escape helper. Frame extractors are
+wrapped with `CachedFrameExtractor` (LRU + serialized FFmpeg). See
+[performance.md](performance.md).
 
 Legacy bake (trim, concat, speed, text PNG, audio mix, duet, cover JPEG)
 still runs; the recipe is the canonical plan.
@@ -76,7 +100,7 @@ still runs; the recipe is the canonical plan.
 | `StillImageEncoderPort` | same LGPL exporter (3 s photo clips) |
 | `FrameExtractorPort` | `FfmpegLgplFrameExtractor` |
 | `DraftStore` | `FileDraftStore` |
-| `CaptionEngine` | `NullCaptionEngine` |
+| `CaptionEngine` | `NullCaptionEngine` (`canTranscribe: false`) |
 | `CapturePort` / `MediaPickerPort` / `PreviewPort` | created by the engine |
 
 UI never imports FFmpeg Kit. Thumbnails go through `FrameExtractorPort`.
@@ -99,8 +123,11 @@ UI never imports FFmpeg Kit. Thumbnails go through `FrameExtractorPort`.
 
 `LocalComposerEngine.capabilities` is `ComposerCapabilities.localV1` =
 `kDefaultV1Features` (record, gallery, trim, filters, text, music, cover,
-multi-clip, speed, templates, captions, duet). Not included: stickers, beauty,
-AR masks, green screen.
+multi-clip, speed, templates, captions tool, duet). Auto-caption Generate is
+off until the host injects a `CaptionEngine` with `canTranscribe`. Not
+included: stickers, beauty, AR masks, green screen, voice-over, waveforms.
+
+Audio mix: [audio.md](audio.md).
 
 ## Analytics
 

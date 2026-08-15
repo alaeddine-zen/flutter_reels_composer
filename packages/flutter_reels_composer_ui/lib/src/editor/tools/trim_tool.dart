@@ -11,7 +11,7 @@ class TrimToolPanel extends StatefulWidget {
   const TrimToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     required this.preview,
     this.frameExtractor = const NoopFrameExtractor(),
@@ -19,11 +19,13 @@ class TrimToolPanel extends StatefulWidget {
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final PreviewPort preview;
   final FrameExtractorPort frameExtractor;
   final Duration maxDuration;
+
+  ComposerEngine get engine => controller.engine;
 
   @override
   State<TrimToolPanel> createState() => _TrimToolPanelState();
@@ -104,14 +106,14 @@ class _TrimToolPanelState extends State<TrimToolPanel> {
 
   Future<void> _commit(RangeValues v, {required bool previewStart}) async {
     final clip = widget.project.clips[_clipIndex];
-    await widget.engine.applyMutation(
+    await widget.controller.applyLive(
       UpdateClipTrimMutation(
         clipId: clip.id,
         trimStart: Duration(milliseconds: v.start.round()),
         trimEnd: Duration(milliseconds: v.end.round()),
       ),
     );
-    final project = widget.engine.project;
+    final project = widget.controller.project;
     final prefix = _prefixBeforeClip(project, _clipIndex);
     final span = Duration(milliseconds: (v.end - v.start).round());
     final global = previewStart ? prefix : prefix + span;
@@ -140,9 +142,9 @@ class _TrimToolPanelState extends State<TrimToolPanel> {
     await _commit(next, previewStart: movedStart);
   }
 
-  Future<void> _onChangeEnd(RangeValues v) async {
+  Future<void> _onChangeEnd(RangeValues _) async {
     HapticFeedback.selectionClick();
-    await _commit(v, previewStart: true);
+    widget.controller.endLive();
     if (!mounted) return;
     setState(() => _scrubbing = false);
     // Resume from trim start so user sees the kept segment.

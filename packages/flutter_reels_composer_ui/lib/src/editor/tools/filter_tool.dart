@@ -10,7 +10,7 @@ class FilterToolPanel extends StatefulWidget {
   const FilterToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.selectedId,
     required this.intensity,
     this.frameExtractor = const NoopFrameExtractor(),
@@ -19,12 +19,14 @@ class FilterToolPanel extends StatefulWidget {
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final String? selectedId;
   final double intensity;
   final FrameExtractorPort frameExtractor;
   final String? previewSourcePath;
   final ValueChanged<bool>? onCompareChanged;
+
+  ComposerEngine get engine => controller.engine;
 
   @override
   State<FilterToolPanel> createState() => _FilterToolPanelState();
@@ -68,7 +70,7 @@ class _FilterToolPanelState extends State<FilterToolPanel> {
 
   Future<void> _applyFilter(String id) async {
     HapticFeedback.selectionClick();
-    await widget.engine.applyMutation(
+    await widget.controller.apply(
       SetColorFilterMutation(id, intensity: _intensity),
     );
   }
@@ -76,12 +78,12 @@ class _FilterToolPanelState extends State<FilterToolPanel> {
   Future<void> _applyIntensity(double v) async {
     setState(() => _intensity = v);
     final id = widget.selectedId ?? 'normal';
-    await widget.engine.applyMutation(SetColorFilterMutation(id, intensity: v));
+    await widget.controller.applyLive(SetColorFilterMutation(id, intensity: v));
   }
 
   @override
   Widget build(BuildContext context) {
-    final filters = widget.engine.effectRegistry.colorFilters;
+    final filters = widget.controller.engine.effectRegistry.colorFilters;
     if (filters.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
@@ -177,6 +179,7 @@ class _FilterToolPanelState extends State<FilterToolPanel> {
                 child: Slider(
                   value: _intensity,
                   onChanged: _applyIntensity,
+                  onChangeEnd: (_) => widget.controller.endLive(),
                   activeColor: widget.theme.accent,
                   inactiveColor: Colors.white24,
                 ),

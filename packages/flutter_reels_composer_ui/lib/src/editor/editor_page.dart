@@ -48,8 +48,10 @@ class _EditorPageState extends State<EditorPage> {
   late final ComposerController _controller;
   late final EditorToolRegistry _registry;
   late final ComposerToolL10n _l10n;
-
-  bool get _previewReady => _preview != null;
+  Timer? _autosaveTimer;
+  DateTime? _autosavedUpdatedAt;
+  bool _autosavedWhileUnstamped = false;
+  String? _thumbKey;
 
   @override
   void initState() {
@@ -68,10 +70,48 @@ class _EditorPageState extends State<EditorPage> {
     // Start with no panel open — TikTok opens tools on demand.
     _selectedToolId = null;
     unawaited(_bootstrap());
+    widget.engine.projectListenable.addListener(_prefetchThumbs);
+    final interval = widget.config.autosaveInterval;
+    if (interval > Duration.zero) {
+      _autosaveTimer = Timer.periodic(interval, (_) {
+        unawaited(_autosaveDraft());
+      });
+    }
+  }
+
+  void _prefetchThumbs() {
+    final project = widget.engine.project;
+    final key = project.clips
+        .map((c) => '${c.sourcePath}|${c.sourceDuration.inMilliseconds}')
+        .join(';');
+    if (key == _thumbKey) return;
+    _thumbKey = key;
+    unawaited(
+      prefetchTimelineThumbs(widget.config.frameExtractor, project.clips),
+    );
+  }
+
+  Future<void> _autosaveDraft() async {
+    if (!mounted || _exporting) return;
+    final project = widget.engine.project;
+    final stamp = project.updatedAt;
+    if (stamp != null) {
+      if (stamp == _autosavedUpdatedAt) return;
+    } else if (_autosavedWhileUnstamped) {
+      return;
+    }
+    try {
+      await _drafts.save(project);
+      _autosavedUpdatedAt = stamp;
+      _autosavedWhileUnstamped = stamp == null;
+    } catch (error) {
+      debugPrint('EditorPage: autosave failed: $error');
+    }
   }
 
   Future<void> _bootstrap() async {
     await widget.engine.loadProject(widget.initialProject);
+    // Gallery-picked filter is initial state, not a user edit — skip undo.
     final pending = widget.initialProject.extras['pendingFilterId'] as String?;
     if (pending != null) {
       await widget.engine.applyMutation(SetColorFilterMutation(pending));
@@ -80,11 +120,14 @@ class _EditorPageState extends State<EditorPage> {
     final preview = widget.engine.attachPreview(widget.engine.project);
     _preview = preview;
     await preview.play();
+    _prefetchThumbs();
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    widget.engine.projectListenable.removeListener(_prefetchThumbs);
+    _autosaveTimer?.cancel();
     final session = _exportSession;
     _exportSession = null;
     if (session != null) {
@@ -255,7 +298,7 @@ class _EditorPageState extends State<EditorPage> {
           properties: {'error': e.toString()},
         ),
       );
-      if (mounted && !e.toString().contains('cancelled')) {
+      if (mounted && e is! ExportCancelledException) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${_l10n.text('exportFailed')}: $e')),
         );
@@ -270,6 +313,7 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   void _selectTool(EditorTool tool) {
+    _controller.endLive();
     widget.config.onEvent?.call(
       ComposerAnalyticsEvent(
         ComposerAnalyticsEventType.toolSelected,
@@ -283,6 +327,26 @@ class _EditorPageState extends State<EditorPage> {
         _selectedTextId = null;
       }
     });
+  }
+
+  Future<void> _undoEdit() async {
+    if (!_controller.canUndo || _exporting) return;
+    HapticFeedback.selectionClick();
+    await _controller.undo();
+    widget.config.onEvent?.call(
+      const ComposerAnalyticsEvent(ComposerAnalyticsEventType.undo),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _redoEdit() async {
+    if (!_controller.canRedo || _exporting) return;
+    HapticFeedback.selectionClick();
+    await _controller.redo();
+    widget.config.onEvent?.call(
+      const ComposerAnalyticsEvent(ComposerAnalyticsEventType.redo),
+    );
+    if (mounted) setState(() {});
   }
 
   void _onTextSelected(String? id) {
@@ -327,243 +391,351 @@ class _EditorPageState extends State<EditorPage> {
         final ok = await _onWillPop();
         if (ok && context.mounted) Navigator.of(context).pop();
       },
-      child: Scaffold(
-        backgroundColor: theme.background,
-        body: ListenableBuilder(
-          listenable: Listenable.merge([
-            widget.engine.projectListenable,
-            if (_previewReady) _preview!,
-          ]),
-          builder: (context, _) {
-            final preview = _preview;
-            if (preview == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final project = widget.engine.project;
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                Column(
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
+            unawaited(_undoEdit());
+          },
+          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
+            unawaited(_undoEdit());
+          },
+          const SingleActivator(
+            LogicalKeyboardKey.keyZ,
+            control: true,
+            shift: true,
+          ): () {
+            unawaited(_redoEdit());
+          },
+          const SingleActivator(
+            LogicalKeyboardKey.keyZ,
+            meta: true,
+            shift: true,
+          ): () {
+            unawaited(_redoEdit());
+          },
+          const SingleActivator(LogicalKeyboardKey.keyY, control: true): () {
+            unawaited(_redoEdit());
+          },
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            backgroundColor: theme.background,
+            body: ListenableBuilder(
+              listenable: Listenable.merge([
+                widget.engine.projectListenable,
+                _controller,
+              ]),
+              builder: (context, _) {
+                final preview = _preview;
+                if (preview == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final project = widget.engine.project;
+                return Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Expanded(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          GestureDetector(
-                            onTap: _onPreviewTap,
-                            child: preview.buildPreview(showTextLayers: false),
-                          ),
-                          if (!preview.isPlaying)
-                            const IgnorePointer(
-                              child: Center(
-                                child: Icon(
-                                  Icons.play_arrow_rounded,
-                                  color: Colors.white54,
-                                  size: 72,
+                    Column(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              GestureDetector(
+                                onTap: _onPreviewTap,
+                                child: RepaintBoundary(
+                                  child: preview.buildPreview(
+                                    showTextLayers: false,
+                                  ),
                                 ),
                               ),
-                            ),
-                          EditableTextLayers(
-                            engine: widget.engine,
-                            project: project,
-                            selectedId: _selectedTextId,
-                            onSelected: _onTextSelected,
-                            position: preview.position,
-                          ),
-                          SafeArea(
-                            child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      IconButton(
-                                        onPressed: _exporting
-                                            ? null
-                                            : _confirmRetake,
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                        ),
-                                        tooltip: _l10n.text('retake'),
+                              ListenableBuilder(
+                                listenable: preview,
+                                builder: (context, _) {
+                                  if (preview.isPlaying) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return const IgnorePointer(
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.play_arrow_rounded,
+                                        color: Colors.white54,
+                                        size: 72,
                                       ),
-                                      const Spacer(),
-                                      FilledButton(
-                                        onPressed: _exporting ? null : _export,
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: theme.accent,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 10,
-                                          ),
-                                          shape: const StadiumBorder(),
-                                        ),
-                                        child: Text(
-                                          _l10n.text('next'),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                  ),
-                                ),
-                                if (project.parentVideoPath != null &&
-                                    project.parentVideoPath!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      56,
-                                      48,
-                                      88,
-                                      0,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        DuetLayoutChip(
-                                          label: 'Split',
-                                          selected:
-                                              project.duetLayout ==
-                                              DuetLayout.split,
-                                          accent: theme.accent,
-                                          onTap: () {
-                                            unawaited(
-                                              widget.engine.applyMutation(
-                                                SetDuetLayoutMutation(
-                                                  layout: DuetLayout.split,
-                                                  parentVideoPath:
-                                                      project.parentVideoPath,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(width: 8),
-                                        DuetLayoutChip(
-                                          label: 'PiP',
-                                          selected:
-                                              project.duetLayout ==
-                                              DuetLayout.pip,
-                                          accent: theme.accent,
-                                          onTap: () {
-                                            unawaited(
-                                              widget.engine.applyMutation(
-                                                SetDuetLayoutMutation(
-                                                  layout: DuetLayout.pip,
-                                                  parentVideoPath:
-                                                      project.parentVideoPath,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (_selectedToolId == null)
-                                  Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        12,
-                                        0,
-                                        12,
-                                        0,
+                                  );
+                                },
+                              ),
+                              ListenableBuilder(
+                                listenable: preview,
+                                builder: (context, _) {
+                                  return EditableTextLayers(
+                                    controller: _controller,
+                                    project: project,
+                                    selectedId: _selectedTextId,
+                                    onSelected: _onTextSelected,
+                                    position: preview.position,
+                                  );
+                                },
+                              ),
+                              SafeArea(
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
                                       ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
+                                      child: Row(
                                         children: [
-                                          if (project.clips.length > 1)
-                                            ClipTimeline(
-                                              theme: theme,
-                                              project: project,
-                                              position: preview.position,
-                                              frameExtractor:
-                                                  widget.config.frameExtractor,
-                                              onSeek: (d) {
-                                                preview.pause();
-                                                preview.seek(d);
-                                              },
+                                          IconButton(
+                                            onPressed: _exporting
+                                                ? null
+                                                : _confirmRetake,
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
                                             ),
-                                          PreviewScrubber(
-                                            theme: theme,
-                                            preview: preview,
-                                            bottomInset: 8,
+                                            tooltip: _l10n.text('retake'),
                                           ),
+                                          IconButton(
+                                            onPressed:
+                                                !_exporting &&
+                                                    _controller.canUndo
+                                                ? () => unawaited(_undoEdit())
+                                                : null,
+                                            icon: Icon(
+                                              Icons.undo,
+                                              color:
+                                                  !_exporting &&
+                                                      _controller.canUndo
+                                                  ? Colors.white
+                                                  : Colors.white38,
+                                            ),
+                                            tooltip: _l10n.text('undo'),
+                                          ),
+                                          IconButton(
+                                            onPressed:
+                                                !_exporting &&
+                                                    _controller.canRedo
+                                                ? () => unawaited(_redoEdit())
+                                                : null,
+                                            icon: Icon(
+                                              Icons.redo,
+                                              color:
+                                                  !_exporting &&
+                                                      _controller.canRedo
+                                                  ? Colors.white
+                                                  : Colors.white38,
+                                            ),
+                                            tooltip: _l10n.text('redo'),
+                                          ),
+                                          const Spacer(),
+                                          FilledButton(
+                                            onPressed: _exporting
+                                                ? null
+                                                : _export,
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: theme.accent,
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 10,
+                                                  ),
+                                              shape: const StadiumBorder(),
+                                            ),
+                                            child: Text(
+                                              _l10n.text('next'),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                Positioned(
-                                  right: 8,
-                                  top: 72,
-                                  bottom: _selectedToolId == null ? 72 : 8,
-                                  width: 72,
-                                  child: SingleChildScrollView(
-                                    child: ToolRail(
-                                      theme: theme,
-                                      tools: tools,
-                                      selected: _selectedToolId,
-                                      l10n: _l10n,
-                                      onSelected: _selectTool,
+                                    if (project.parentVideoPath != null &&
+                                        project.parentVideoPath!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          56,
+                                          48,
+                                          88,
+                                          0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            DuetLayoutChip(
+                                              label: 'Split',
+                                              selected:
+                                                  project.duetLayout ==
+                                                  DuetLayout.split,
+                                              accent: theme.accent,
+                                              onTap: () {
+                                                unawaited(
+                                                  _controller.apply(
+                                                    SetDuetLayoutMutation(
+                                                      layout: DuetLayout.split,
+                                                      parentVideoPath: project
+                                                          .parentVideoPath,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(width: 8),
+                                            DuetLayoutChip(
+                                              label: 'PiP',
+                                              selected:
+                                                  project.duetLayout ==
+                                                  DuetLayout.pip,
+                                              accent: theme.accent,
+                                              onTap: () {
+                                                unawaited(
+                                                  _controller.apply(
+                                                    SetDuetLayoutMutation(
+                                                      layout: DuetLayout.pip,
+                                                      parentVideoPath: project
+                                                          .parentVideoPath,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (_selectedToolId == null)
+                                      Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            12,
+                                            0,
+                                            12,
+                                            0,
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ListenableBuilder(
+                                                listenable: preview,
+                                                builder: (context, _) {
+                                                  if (project.clips.isEmpty) {
+                                                    return PreviewScrubber(
+                                                      theme: theme,
+                                                      preview: preview,
+                                                      bottomInset: 8,
+                                                    );
+                                                  }
+                                                  return ClipTimeline(
+                                                    theme: theme,
+                                                    project: project,
+                                                    position: preview.position,
+                                                    frameExtractor: widget
+                                                        .config
+                                                        .frameExtractor,
+                                                    controller: _controller,
+                                                    maxDuration: widget
+                                                        .config
+                                                        .maxDuration,
+                                                    canSplit: _gate.allows(
+                                                      ComposerFeature.multiClip,
+                                                    ),
+                                                    canDelete: _gate.allows(
+                                                      ComposerFeature.multiClip,
+                                                    ),
+                                                    l10n: _l10n,
+                                                    onSeek: (d) {
+                                                      preview.pause();
+                                                      preview.seek(d);
+                                                    },
+                                                    onSplit: () {
+                                                      widget.config.onEvent?.call(
+                                                        const ComposerAnalyticsEvent(
+                                                          ComposerAnalyticsEventType
+                                                              .clipSplit,
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    Positioned(
+                                      right: 8,
+                                      top: 72,
+                                      bottom: _selectedToolId == null ? 140 : 8,
+                                      width: 72,
+                                      child: SingleChildScrollView(
+                                        child: ToolRail(
+                                          theme: theme,
+                                          tools: tools,
+                                          selected: _selectedToolId,
+                                          l10n: _l10n,
+                                          onSelected: _selectTool,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_selectedToolId != null)
+                          GestureDetector(
+                            onVerticalDragEnd: (details) {
+                              if ((details.primaryVelocity ?? 0) > 280) {
+                                setState(() {
+                                  _selectedToolId = null;
+                                  _selectedTextId = null;
+                                });
+                                preview.setCompareOriginal(false);
+                              }
+                            },
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.sizeOf(context).height * 0.42,
+                              ),
+                              child: SingleChildScrollView(
+                                child: _buildToolPanel(_selectedToolId!),
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                    if (_selectedToolId != null)
-                      GestureDetector(
-                        onVerticalDragEnd: (details) {
-                          if ((details.primaryVelocity ?? 0) > 280) {
-                            setState(() {
-                              _selectedToolId = null;
-                              _selectedTextId = null;
-                            });
-                            preview.setCompareOriginal(false);
-                          }
-                        },
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight: MediaQuery.sizeOf(context).height * 0.42,
-                          ),
-                          child: SingleChildScrollView(
-                            child: _buildToolPanel(_selectedToolId!),
+                    if (_exporting)
+                      ColoredBox(
+                        color: Colors.black54,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(
+                                value: _exportProgress.clamp(0.0, 1.0),
+                                color: theme.accent,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                '${_l10n.text('exporting')} '
+                                '${(_exportProgress * 100).round()}%',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                   ],
-                ),
-                if (_exporting)
-                  ColoredBox(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(
-                            value: _exportProgress.clamp(0.0, 1.0),
-                            color: theme.accent,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '${_l10n.text('exporting')} '
-                            '${(_exportProgress * 100).round()}%',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

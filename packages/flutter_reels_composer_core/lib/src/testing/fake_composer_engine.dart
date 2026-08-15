@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../api/composer_errors.dart';
 import '../capabilities/composer_capabilities.dart';
 import '../contracts/capture_port.dart';
 import '../contracts/composer_engine.dart';
@@ -137,12 +138,12 @@ class FakeComposerEngine implements ComposerEngine {
       onProgress(
         const ExportProgress(phase: ExportPhase.preparing, progress: 0.1),
       );
-      if (cancelToken.isCancelled) throw StateError('Export cancelled');
+      if (cancelToken.isCancelled) throw const ExportCancelledException();
       if (failExport) throw StateError('Fake export failed');
       if (exportDelay > Duration.zero) {
         await Future<void>.delayed(exportDelay);
       }
-      if (cancelToken.isCancelled) throw StateError('Export cancelled');
+      if (cancelToken.isCancelled) throw const ExportCancelledException();
       final dir = Directory.systemTemp.createTempSync('reels_fake_export_');
       final video = File('${dir.path}/reel.mp4')
         ..writeAsBytesSync(const [0, 0, 0, 0]);
@@ -289,6 +290,7 @@ class FakePreviewPort extends PreviewPort {
   ProjectDocument _project;
   bool _playing = false;
   Duration _position = Duration.zero;
+  bool looping = true;
 
   void updateProject(ProjectDocument project) {
     _project = project;
@@ -329,7 +331,9 @@ class FakePreviewPort extends PreviewPort {
   }
 
   @override
-  Future<void> setLooping(bool looping) async {}
+  Future<void> setLooping(bool looping) async {
+    this.looping = looping;
+  }
 
   @override
   Widget buildPreview({Key? key, bool showTextLayers = true}) =>

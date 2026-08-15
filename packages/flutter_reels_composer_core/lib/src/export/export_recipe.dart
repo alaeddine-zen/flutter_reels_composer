@@ -54,6 +54,10 @@ class ExportRecipe {
 
   bool get needsTrim => segments.any((s) => s.isTrimmed);
 
+  bool get needsFade => segments.any(
+    (s) => s.fadeIn > Duration.zero || s.transitionOut > Duration.zero,
+  );
+
   /// Same reencode rule as [ExportPlan.needsReencode].
   bool get needsReencode =>
       needsConcat ||
@@ -61,7 +65,8 @@ class ExportRecipe {
       needsText ||
       needsMusic ||
       needsSpeed ||
-      needsDuet;
+      needsDuet ||
+      needsFade;
 
   Set<ExportOperationKind> get requiredOperations => {
     if (needsTrim) ExportOperationKind.trim,
@@ -74,6 +79,7 @@ class ExportRecipe {
     if (needsStillImage) ExportOperationKind.stillImage,
     if (needsStickers) ExportOperationKind.stickerOverlay,
     if (needsVoiceover) ExportOperationKind.voiceover,
+    if (needsFade) ExportOperationKind.fade,
   };
 
   factory ExportRecipe.fromGraph(RenderGraph graph) {

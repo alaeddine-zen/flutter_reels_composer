@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -39,16 +40,17 @@ class FfmpegLgplExportPort
 
   ExportCapabilitySet get capabilities => ExportCapabilitySet.ffmpegV1;
 
-  String _videoEncodeArgs() {
+  String _videoEncodeArgs([int bitrate = 6_000_000]) {
+    final b = '${(bitrate / 1e6).clamp(0.4, 50.0).toStringAsFixed(1)}M';
     if (videoCodec == FfmpegLgplVideoCodec.hardwareH264) {
       if (Platform.isIOS || Platform.isMacOS) {
-        return '-c:v h264_videotoolbox -b:v 6M -pix_fmt yuv420p';
+        return '-c:v h264_videotoolbox -b:v $b -pix_fmt yuv420p';
       }
       if (Platform.isAndroid) {
-        return '-c:v h264_mediacodec -b:v 6M -pix_fmt yuv420p';
+        return '-c:v h264_mediacodec -b:v $b -pix_fmt yuv420p';
       }
     }
-    return '-c:v mpeg4 -q:v 5 -pix_fmt yuv420p';
+    return '-c:v mpeg4 -b:v $b -pix_fmt yuv420p';
   }
 
   @override
@@ -83,13 +85,12 @@ class FfmpegLgplExportPort
       ),
     );
     final command =
-        '-y -loop 1 -t 3 -i "${_escape(image.path)}" '
+        '-y -loop 1 -t 3 -i "${ffmpegEscapePath(image.path)}" '
         '-f lavfi -t 3 -i anullsrc=channel_layout=stereo:sample_rate=44100 '
-        '-vf "scale=1080:1920:force_original_aspect_ratio=decrease,'
-        'pad=1080:1920:(ow-iw)/2:(oh-ih)/2" '
+        '-vf "${FfmpegFilters.canvasCover(width: 1080, height: 1920, fps: 30)}" '
         '-map 0:v:0 -map 1:a:0 ${_videoEncodeArgs()} -r 30 '
         '-c:a aac -b:a 128k -shortest -movflags +faststart '
-        '"${_escape(output.path)}"';
+        '"${ffmpegEscapePath(output.path)}"';
     final session = await FFmpegKit.execute(command);
     final code = await session.getReturnCode();
     if (!ReturnCode.isSuccess(code) ||
@@ -111,15 +112,28 @@ class FfmpegLgplExportPort
         const ExportProgress(phase: ExportPhase.preparing, progress: 0.05),
       );
       if (project.clips.isEmpty) {
-        throw StateError('No source video in project');
+        throw const ComposerException('no_clips', 'No source video in project');
       }
       for (final clip in project.clips) {
         if (!File(clip.sourcePath).existsSync()) {
-          throw StateError('Missing clip file: ${clip.sourcePath}');
+          throw MissingClipException(clip.sourcePath);
+        }
+      }
+      final recipe = ExportRecipe.fromProject(project, registry: _registry);
+      if (recipe.needsDuet) {
+        final parent = project.parentVideoPath;
+        if (parent == null || parent.isEmpty || !File(parent).existsSync()) {
+          throw MissingClipException(parent ?? '');
         }
       }
       if (cancelToken.isCancelled) {
-        throw StateError('Export cancelled');
+        throw const ExportCancelledException();
+      }
+      final unsupported = capabilities.unsupportedOperations(
+        recipe.requiredOperations,
+      );
+      if (unsupported.isNotEmpty) {
+        throw UnsupportedExportException(unsupported);
       }
 
       final recipe = ExportRecipe.fromProject(project, registry: _registry);
@@ -173,7 +187,7 @@ class FfmpegLgplExportPort
       );
 
       if (cancelToken.isCancelled) {
-        throw StateError('Export cancelled');
+        throw const ExportCancelledException();
       }
 
       File? cover;
@@ -266,8 +280,8 @@ class FfmpegLgplExportPort
       final videoFilters = vf
           .where((e) => e != 'null' && e.isNotEmpty)
           .toList();
-      final originalVol = (original?.volume ?? 1.0).clamp(0.0, 2.0);
-      final musicVol = (music?.volume ?? 1.0).clamp(0.0, 2.0);
+      final originalVol = (original?.volume ?? 1.0).clamp(0.0, 1.0);
+      final musicVol = (music?.volume ?? 1.0).clamp(0.0, 1.0);
       final musicStartSec = ((music?.startOffset.inMilliseconds ?? 0) / 1000.0)
           .clamp(0.0, 36000.0);
       final musicEndSec = musicStartSec + durationSec;
@@ -278,12 +292,16 @@ class FfmpegLgplExportPort
         if (overlayPng case final File overlay) overlay,
         ...timedPngs,
       ];
-      final inputFlags = StringBuffer('-y -i "${_escape(sourcePath)}"');
+      final inputFlags = StringBuffer(
+        '-y -i "${ffmpegEscapePath(sourcePath)}"',
+      );
       for (final f in overlayInputs) {
-        inputFlags.write(' -i "${_escape(f.path)}"');
+        inputFlags.write(' -i "${ffmpegEscapePath(f.path)}"');
       }
       if (hasMusic) {
-        inputFlags.write(' -stream_loop -1 -i "${_escape(music.sourcePath!)}"');
+        inputFlags.write(
+          ' -stream_loop -1 -i "${ffmpegEscapePath(music.sourcePath!)}"',
+        );
       }
 
       final w = project.settings.width;
@@ -329,22 +347,22 @@ class FfmpegLgplExportPort
         cmd =
             '$inputFlags -filter_complex "${fc.toString()}" '
             '-map "[$last]" -map "[a]" '
-            '${_videoEncodeArgs()} '
+            '${_videoEncodeArgs(project.settings.bitrate)} '
             '-c:a aac -b:a 128k -shortest -movflags +faststart '
             '"$bakePath"';
       } else if (overlayInputs.isNotEmpty) {
         cmd =
             '$inputFlags -filter_complex "${fc.toString()}" '
             '-map "[$last]" -map 0:a? '
-            '${_videoEncodeArgs()} '
+            '${_videoEncodeArgs(project.settings.bitrate)} '
             '-c:a aac -b:a 128k -af "volume=$originalVol" '
             '-movflags +faststart "$bakePath"';
       } else {
         cmd =
-            '-y -i "${_escape(sourcePath)}" '
+            '-y -i "${ffmpegEscapePath(sourcePath)}" '
             '-vf "${videoFilters.join(',')}" '
             '-af "volume=$originalVol" '
-            '${_videoEncodeArgs()} '
+            '${_videoEncodeArgs(project.settings.bitrate)} '
             '-c:a aac -b:a 128k -movflags +faststart '
             '"$bakePath"';
       }
@@ -367,38 +385,20 @@ class FfmpegLgplExportPort
         width: project.settings.width,
         height: project.settings.height,
         durationSec: durationSec,
+        bitrate: project.settings.bitrate,
         cancelToken: cancelToken,
       );
     }
   }
 
-  /// Single clip: trim + ensure AAC. Multi: normalize + concat.
+  /// Every segment is canvas-cover cropped (preview `BoxFit.cover`), including
+  /// the single-clip case. Multi-clip then concatenates.
   Future<String> _resolveSourceVideo({
     required ProjectDocument project,
     required ExportRecipe recipe,
     required Directory workDir,
     required CancelToken cancelToken,
   }) async {
-    if (recipe.segments.length == 1) {
-      final segment = recipe.segments.first;
-      final startSec = segment.trimStart.inMilliseconds / 1000.0;
-      final durationSec = (segment.sourceSpan.inMilliseconds / 1000.0).clamp(
-        0.05,
-        600.0,
-      );
-      final trimmed = File(p.join(workDir.path, 'clip0.mp4'));
-      await _encodeSegment(
-        inputPath: segment.sourcePath,
-        outputPath: trimmed.path,
-        startSec: startSec,
-        durationSec: durationSec,
-        speed: segment.speed,
-        isImage: segment.isImage,
-        cancelToken: cancelToken,
-      );
-      return trimmed.path;
-    }
-
     final segmentPaths = <String>[];
     for (var i = 0; i < recipe.segments.length; i++) {
       final segment = recipe.segments[i];
@@ -407,9 +407,12 @@ class FfmpegLgplExportPort
         0.05,
         600.0,
       );
-      final out = File(p.join(workDir.path, 'seg_$i.mp4'));
-      final w = project.settings.width;
-      final h = project.settings.height;
+      final out = File(
+        p.join(
+          workDir.path,
+          recipe.segments.length == 1 ? 'clip0.mp4' : 'seg_$i.mp4',
+        ),
+      );
       await _encodeSegment(
         inputPath: segment.sourcePath,
         outputPath: out.path,
@@ -417,13 +420,14 @@ class FfmpegLgplExportPort
         durationSec: durationSec,
         speed: segment.speed,
         isImage: segment.isImage,
-        videoFilter:
-            'scale=$w:$h:force_original_aspect_ratio=decrease,'
-            'pad=$w:$h:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p',
+        settings: project.settings,
+        fadeIn: segment.fadeIn,
+        fadeOut: segment.transitionOut,
         cancelToken: cancelToken,
       );
       segmentPaths.add(out.path);
     }
+    if (segmentPaths.length == 1) return segmentPaths.first;
 
     final listFile = File(p.join(workDir.path, 'concat.txt'));
     final body = segmentPaths
@@ -433,7 +437,7 @@ class FfmpegLgplExportPort
 
     final concatOut = File(p.join(workDir.path, 'concat.mp4'));
     final concatCmd =
-        '-y -f concat -safe 0 -i "${_escape(listFile.path)}" '
+        '-y -f concat -safe 0 -i "${ffmpegEscapePath(listFile.path)}" '
         '-c copy -movflags +faststart "${concatOut.path}"';
     await _runFfmpeg(concatCmd, cancelToken);
     return concatOut.path;
@@ -488,7 +492,9 @@ class FfmpegLgplExportPort
           ),
         ),
         textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
+        textDirection: textLooksRtl(text)
+            ? TextDirection.rtl
+            : TextDirection.ltr,
       )..layout();
 
       final cx = layer.normalizedPosition.dx * width;
@@ -530,26 +536,38 @@ class FfmpegLgplExportPort
     required String outputPath,
     required double startSec,
     required double durationSec,
-    String? videoFilter,
+    required VideoSettings settings,
+    required CancelToken cancelToken,
     double speed = 1.0,
     bool isImage = false,
-    required CancelToken cancelToken,
+    Duration fadeIn = Duration.zero,
+    Duration fadeOut = Duration.zero,
   }) async {
-    final speedVf = FfmpegFilters.setpts(speed);
-    var vfBody = videoFilter ?? '';
-    if (speedVf.isNotEmpty) {
-      vfBody = vfBody.isEmpty ? speedVf : '$vfBody,$speedVf';
-    }
-    final vf = vfBody.isEmpty ? '' : '-vf "$vfBody" ';
     final outDur = (durationSec / speed.clamp(0.3, 3.0)).clamp(0.05, 600.0);
+    final vfBody = FfmpegFilters.join([
+      FfmpegFilters.canvasCover(
+        width: settings.width,
+        height: settings.height,
+        fps: settings.fps,
+      ),
+      FfmpegFilters.setpts(speed),
+      FfmpegFilters.dipToBlack(
+        durationSec: outDur,
+        fadeInSec: fadeIn.inMilliseconds / 1000.0,
+        fadeOutSec: fadeOut.inMilliseconds / 1000.0,
+      ),
+    ]);
+    final vf = '-vf "$vfBody" ';
+    final encode = _videoEncodeArgs(settings.bitrate);
+    final fps = settings.fps.clamp(1, 120);
 
     if (isImage) {
       final still =
-          '-y -loop 1 -t $outDur -i "${_escape(inputPath)}" '
+          '-y -loop 1 -t $outDur -i "${ffmpegEscapePath(inputPath)}" '
           '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '
           '$vf'
           '-map 0:v:0 -map 1:a:0 '
-          '${_videoEncodeArgs()} -r 30 '
+          '$encode -r $fps '
           '-c:a aac -ar 44100 -ac 2 -b:a 128k -shortest '
           '-movflags +faststart "$outputPath"';
       await _runFfmpeg(still, cancelToken);
@@ -559,9 +577,9 @@ class FfmpegLgplExportPort
     final atempo = FfmpegFilters.atempoChain(speed);
     final af = atempo.isEmpty ? '' : '-af "$atempo" ';
     final withAudio =
-        '-y -ss $startSec -t $durationSec -i "${_escape(inputPath)}" '
+        '-y -ss $startSec -t $durationSec -i "${ffmpegEscapePath(inputPath)}" '
         '$vf$af'
-        '${_videoEncodeArgs()} '
+        '$encode '
         '-c:a aac -ar 44100 -ac 2 -b:a 128k '
         '-movflags +faststart "$outputPath"';
     try {
@@ -571,11 +589,11 @@ class FfmpegLgplExportPort
       // Video-only sources (legacy photo clips, muted imports).
     }
     final silent =
-        '-y -ss $startSec -t $durationSec -i "${_escape(inputPath)}" '
+        '-y -ss $startSec -t $durationSec -i "${ffmpegEscapePath(inputPath)}" '
         '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '
         '$vf'
         '-map 0:v:0 -map 1:a:0 '
-        '${_videoEncodeArgs()} '
+        '$encode '
         '-c:a aac -ar 44100 -ac 2 -b:a 128k -shortest '
         '-movflags +faststart "$outputPath"';
     await _runFfmpeg(silent, cancelToken);
@@ -589,6 +607,7 @@ class FfmpegLgplExportPort
     required int width,
     required int height,
     required double durationSec,
+    required int bitrate,
     required CancelToken cancelToken,
   }) async {
     final halfH = height ~/ 2;
@@ -610,23 +629,23 @@ class FfmpegLgplExportPort
     }
     final durSec = durationSec.clamp(0.05, 600.0);
     final cmd =
-        '-y -i "${_escape(parentPath)}" -i "${_escape(userPath)}" '
+        '-y -i "${ffmpegEscapePath(parentPath)}" -i "${ffmpegEscapePath(userPath)}" '
         '-filter_complex '
         '"$vchain;'
         '[0:a]volume=0.4[a0];[1:a]volume=1.0[a1];'
         '[a0][a1]amix=inputs=2:duration=shortest:dropout_transition=0[a]" '
         '-map "[v]" -map "[a]" -t $durSec '
-        '${_videoEncodeArgs()} '
+        '${_videoEncodeArgs(bitrate)} '
         '-c:a aac -b:a 128k -shortest -movflags +faststart '
         '"$outputPath"';
     try {
       await _runFfmpeg(cmd, cancelToken);
     } catch (_) {
       final silent =
-          '-y -i "${_escape(parentPath)}" -i "${_escape(userPath)}" '
+          '-y -i "${ffmpegEscapePath(parentPath)}" -i "${ffmpegEscapePath(userPath)}" '
           '-filter_complex "$vchain" '
           '-map "[v]" -map 1:a? -t $durSec '
-          '${_videoEncodeArgs()} '
+          '${_videoEncodeArgs(bitrate)} '
           '-c:a aac -b:a 128k -shortest -movflags +faststart '
           '"$outputPath"';
       await _runFfmpeg(silent, cancelToken);
@@ -634,22 +653,30 @@ class FfmpegLgplExportPort
   }
 
   Future<void> _runFfmpeg(String command, CancelToken cancelToken) async {
-    if (cancelToken.isCancelled) throw StateError('Export cancelled');
-    final session = await FFmpegKit.executeAsync(command, null);
-    // Poll until done so cancel can interrupt.
-    while (!cancelToken.isCancelled) {
-      final code = await session.getReturnCode();
-      if (code != null) {
-        if (!ReturnCode.isSuccess(code)) {
-          final logs = await session.getAllLogsAsString();
-          throw StateError('FFmpeg export failed: ${logs ?? code}');
-        }
-        return;
+    if (cancelToken.isCancelled) throw const ExportCancelledException();
+    final finished = Completer<void>();
+    final session = await FFmpegKit.executeAsync(command, (_) {
+      if (!finished.isCompleted) finished.complete();
+    });
+    while (!finished.isCompleted) {
+      if (cancelToken.isCancelled) {
+        await FFmpegKit.cancel();
+        throw const ExportCancelledException();
       }
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await Future.any([
+        finished.future,
+        Future<void>.delayed(const Duration(milliseconds: 200)),
+      ]);
     }
-    await FFmpegKit.cancel();
-    throw StateError('Export cancelled');
+    if (cancelToken.isCancelled) {
+      await FFmpegKit.cancel();
+      throw const ExportCancelledException();
+    }
+    final code = await session.getReturnCode();
+    if (!ReturnCode.isSuccess(code)) {
+      final logs = await session.getAllLogsAsString();
+      throw StateError('FFmpeg export failed: ${logs ?? code}');
+    }
   }
 
   Future<File?> _writeCover(
@@ -667,8 +694,8 @@ class FfmpegLgplExportPort
       final offsetSec = project.cover.timeOffset.inMilliseconds / 1000.0;
       final dest = File(p.join(outDir.path, 'cover.jpg'));
       final cmd =
-          '-y -ss $offsetSec -i "${_escape(video.path)}" -frames:v 1 -q:v 2 '
-          '"${dest.path}"';
+          '-y -ss $offsetSec -i "${ffmpegEscapePath(video.path)}" -frames:v 1 -q:v 2 '
+          '"${ffmpegEscapePath(dest.path)}"';
       await _runFfmpeg(cmd, CancelToken());
       if (dest.existsSync()) return dest;
     } catch (error) {
@@ -676,6 +703,4 @@ class FfmpegLgplExportPort
     }
     return null;
   }
-
-  String _escape(String path) => path.replaceAll('"', r'\"');
 }

@@ -95,7 +95,7 @@ class LocalMediaPicker implements MediaPickerPort {
     final dir = await getTemporaryDirectory();
 
     if (!asset.isVideo) {
-      return _photoToClip(file, dir);
+      return _importPhoto(file, dir);
     }
 
     final ext = p.extension(file.path).isEmpty
@@ -134,14 +134,14 @@ class LocalMediaPicker implements MediaPickerPort {
     try {
       final FilePickerResult? result;
       if (Platform.isIOS) {
-        result = await FilePicker.pickFiles(
+        result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'caf'],
           allowMultiple: false,
           withData: true,
         );
       } else {
-        result = await FilePicker.pickFiles(
+        result = await FilePicker.platform.pickFiles(
           type: FileType.audio,
           allowMultiple: false,
           withData: false,
@@ -181,9 +181,26 @@ class LocalMediaPicker implements MediaPickerPort {
     }
   }
 
-  Future<CapturedMedia?> _photoToClip(File image, Directory dir) async {
-    final encoder = photoClipEncoder;
-    if (encoder == null) return null;
-    return encoder(image, dir);
+  Future<CapturedMedia?> _importPhoto(File image, Directory dir) async {
+    final ext = p.extension(image.path).isEmpty
+        ? '.jpg'
+        : p.extension(image.path);
+    final dest = File(
+      p.join(
+        dir.path,
+        'reel_photo_${DateTime.now().millisecondsSinceEpoch}$ext',
+      ),
+    );
+    await image.copy(dest.path);
+    if (!dest.existsSync() || dest.lengthSync() == 0) {
+      final encoder = photoClipEncoder;
+      if (encoder == null) return null;
+      return encoder(image, dir);
+    }
+    return CapturedMedia(
+      path: dest.path,
+      duration: photoClipDuration,
+      isVideo: false,
+    );
   }
 }

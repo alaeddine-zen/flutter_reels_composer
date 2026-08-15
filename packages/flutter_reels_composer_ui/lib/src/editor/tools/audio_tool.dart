@@ -3,24 +3,25 @@ import 'package:uuid/uuid.dart';
 
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
 import '../../l10n/composer_l10n.dart';
-import '../../widgets/music_waveform.dart';
 
 /// Applies music mutations only — preview playback is owned by LocalPreviewPort.
 class AudioToolPanel extends StatefulWidget {
   const AudioToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.catalog,
     required this.selectedMusicId,
     this.preview,
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final MusicCatalog catalog;
   final String? selectedMusicId;
   final PreviewPort? preview;
+
+  ComposerEngine get engine => controller.engine;
 
   @override
   State<AudioToolPanel> createState() => _AudioToolPanelState();
@@ -120,7 +121,7 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
         _startOffsetMs = 0;
       }
     });
-    await widget.engine.applyMutation(
+    await widget.controller.apply(
       SetMusicTrackMutation(
         musicId: musicId,
         sourcePath: sourcePath,
@@ -131,36 +132,27 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
     );
   }
 
-  Future<void> _applyMusic({Duration? startOffset}) async {
-    if (!_hasSelection && startOffset == null) {
-      await widget.engine.applyMutation(
-        SetMusicTrackMutation(
-          musicId: widget.selectedMusicId ?? _musicTrack?.musicId,
-          sourcePath: _effectiveMusicPath,
-          volume: _musicVolume,
-          originalVolume: _originalVolume,
-        ),
-      );
-      return;
-    }
-    await widget.engine.applyMutation(
-      SetMusicTrackMutation(
-        musicId: widget.selectedMusicId ?? _musicTrack?.musicId,
-        sourcePath: _effectiveMusicPath,
-        volume: _musicVolume,
-        originalVolume: _originalVolume,
-        startOffset:
-            startOffset ?? Duration(milliseconds: _startOffsetMs.round()),
-      ),
+  Future<void> _applyMusic({Duration? startOffset, bool live = false}) async {
+    final mutation = SetMusicTrackMutation(
+      musicId: widget.selectedMusicId ?? _musicTrack?.musicId,
+      sourcePath: _effectiveMusicPath,
+      volume: _musicVolume,
+      originalVolume: _originalVolume,
+      startOffset:
+          startOffset ?? Duration(milliseconds: _startOffsetMs.round()),
     );
-    // Scrub preview to hear the new music entry point on the current frame.
+    if (live) {
+      await widget.controller.applyLive(mutation);
+    } else {
+      await widget.controller.apply(mutation);
+    }
     final preview = widget.preview;
     if (preview != null && startOffset != null) {
       await preview.seek(preview.position);
     }
   }
 
-  Future<void> _applyVolumes() => _applyMusic();
+  Future<void> _applyVolumes({bool live = false}) => _applyMusic(live: live);
 
   Future<void> _pickFromDevice() async {
     if (_picking) return;
@@ -202,7 +194,7 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: _hasSelection ? 310 : 220,
+          height: _hasSelection ? 268 : 220,
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -257,8 +249,9 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                             value: _originalVolume,
                             onChanged: (v) {
                               setState(() => _originalVolume = v);
-                              _applyVolumes();
+                              _applyVolumes(live: true);
                             },
+                            onChangeEnd: (_) => widget.controller.endLive(),
                             activeColor: widget.theme.accent,
                           ),
                         ],
@@ -280,8 +273,9 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                             onChanged: (v) {
                               setState(() => _musicVolume = v);
                               if (!_hasSelection) return;
-                              _applyVolumes();
+                              _applyVolumes(live: true);
                             },
+                            onChangeEnd: (_) => widget.controller.endLive(),
                             activeColor: widget.theme.accent,
                           ),
                         ],
@@ -290,21 +284,7 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                   ],
                 ),
               ),
-              if (_hasSelection) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                  child: MusicWaveform(
-                    seed:
-                        _effectiveMusicPath ??
-                        widget.selectedMusicId ??
-                        'music',
-                    progress: _maxStartMs <= 0
-                        ? 0
-                        : (_startOffsetMs / _maxStartMs).clamp(0.0, 1.0),
-                    accent: widget.theme.accent,
-                    height: 32,
-                  ),
-                ),
+              if (_hasSelection)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                   child: Row(
@@ -333,8 +313,10 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                             setState(() => _startOffsetMs = v);
                             _applyMusic(
                               startOffset: Duration(milliseconds: v.round()),
+                              live: true,
                             );
                           },
+                          onChangeEnd: (_) => widget.controller.endLive(),
                         ),
                       ),
                       SizedBox(
@@ -351,7 +333,6 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                     ],
                   ),
                 ),
-              ],
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

@@ -1,3 +1,19 @@
+## Unreleased
+
+- Wire editor tools through `ComposerController.apply` / `applyLive`.
+- Add undo / redo in the editor (buttons + Ctrl/Cmd+Z).
+- Professional `ClipTimeline`: split, trim/roll handles, snap, zoom.
+- Timeline fade toggle (dip-to-black, not overlapping crossfade).
+- Cover panel: export quality chips 480 / 720 / 1080.
+- Periodic editor autosave; typed `ExportCancelledException` handling.
+- RTL overlay text; gallery photos import as `ImageClip` (no FFmpeg at import).
+- Editor chrome no longer rebuilds on every preview tick; timeline playhead
+  listens to `PreviewPort` only.
+- Clip filmstrips extract 8 stable source frames (trim/zoom crop in-widget).
+- Prefetch those thumbs when the project loads.
+- Remove decorative music waveform; start offset is a slider only.
+- Hide caption Generate unless `CaptionEngine.canTranscribe`.
+
 ## 0.2.0
 
 - Add camera, gallery, and editor pages plus the default tool rail.

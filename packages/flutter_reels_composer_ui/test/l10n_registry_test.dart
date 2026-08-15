@@ -25,7 +25,12 @@ void main() {
     expect(unknown.text('exportFailed'), 'Export failed');
     expect(en.text('not_a_real_key'), 'not_a_real_key');
     expect(en.textWith('addClips', {'count': 3}), 'Add 3 clip(s)');
-    expect(en.text('leaveConfirm'), isNot('leaveConfirm'));
+    expect(en.text('undo'), 'Undo');
+    expect(fr.text('undo'), 'Annuler');
+    expect(en.text('redo'), 'Redo');
+    expect(en.text('splitClip'), 'Split clip');
+    expect(en.text('fade'), 'Fade');
+    expect(fr.text('fade'), 'Fondu');
     expect(fr.text('newText'), 'Nouveau');
     expect(en.toolLabel(ComposerFeature.trim), 'Trim');
   });

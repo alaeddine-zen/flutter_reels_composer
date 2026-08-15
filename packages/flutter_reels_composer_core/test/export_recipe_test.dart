@@ -72,6 +72,27 @@ void main() {
       expect(recipe.needsReencode, isTrue);
     });
 
+    test('dip-to-black fade needs fade op and reencode', () {
+      var project = _clip();
+      project = applyProjectMutation(
+        project,
+        const SetClipTransitionMutation(
+          clipId: 'c1',
+          transitionOut: kDefaultClipFade,
+        ),
+      );
+      final recipe = ExportRecipe.fromProject(project);
+      expect(recipe.needsFade, isTrue);
+      expect(recipe.needsReencode, isTrue);
+      expect(recipe.requiredOperations, contains(ExportOperationKind.fade));
+      expect(
+        ExportCapabilitySet.ffmpegV1.unsupportedOperations(
+          recipe.requiredOperations,
+        ),
+        isEmpty,
+      );
+    });
+
     test('duet needs reencode', () {
       final project = _clip().copyWith(
         extras: {

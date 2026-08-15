@@ -16,6 +16,7 @@ class Filmstrip extends StatefulWidget {
     this.range,
     this.accent,
     this.frameExtractor = const NoopFrameExtractor(),
+    this.stillImage = false,
   });
 
   final String sourcePath;
@@ -29,6 +30,9 @@ class Filmstrip extends StatefulWidget {
   final Color? accent;
   final FrameExtractorPort frameExtractor;
 
+  /// Tile [sourcePath] itself (photo clips) instead of extracting video frames.
+  final bool stillImage;
+
   @override
   State<Filmstrip> createState() => _FilmstripState();
 }
@@ -36,6 +40,7 @@ class Filmstrip extends StatefulWidget {
 class _FilmstripState extends State<Filmstrip> {
   List<File> _frames = const [];
   bool _loading = true;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -50,12 +55,23 @@ class _FilmstripState extends State<Filmstrip> {
         oldWidget.start != widget.start ||
         oldWidget.end != widget.end ||
         oldWidget.count != widget.count ||
-        oldWidget.frameExtractor != widget.frameExtractor) {
+        oldWidget.frameExtractor != widget.frameExtractor ||
+        oldWidget.stillImage != widget.stillImage) {
       _load();
     }
   }
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
+    if (widget.stillImage) {
+      if (mounted && generation == _loadGeneration) {
+        setState(() {
+          _frames = const [];
+          _loading = false;
+        });
+      }
+      return;
+    }
     setState(() => _loading = true);
     final frames = await widget.frameExtractor.extract(
       sourcePath: widget.sourcePath,
@@ -64,7 +80,7 @@ class _FilmstripState extends State<Filmstrip> {
       count: widget.count,
       height: widget.height.round(),
     );
-    if (!mounted) return;
+    if (!mounted || generation != _loadGeneration) return;
     setState(() {
       _frames = frames;
       _loading = false;
@@ -92,23 +108,20 @@ class _FilmstripState extends State<Filmstrip> {
                   ),
                 ),
               )
-            else if (_frames.isEmpty)
-              ColoredBox(
-                color: Colors.white10,
-                child: Row(
-                  children: List.generate(
-                    widget.count,
-                    (i) => Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                        color: Colors.white.withValues(
-                          alpha: 0.06 + (i % 3) * 0.03,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+            else if (widget.stillImage)
+              Image.file(
+                File(widget.sourcePath),
+                fit: BoxFit.cover,
+                height: widget.height,
+                width: double.infinity,
+                cacheHeight: (widget.height * 2).round(),
+                filterQuality: FilterQuality.low,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) =>
+                    const ColoredBox(color: Colors.white12),
               )
+            else if (_frames.isEmpty)
+              const ColoredBox(color: Colors.white10)
             else
               Row(
                 children: [
@@ -118,6 +131,9 @@ class _FilmstripState extends State<Filmstrip> {
                         f,
                         fit: BoxFit.cover,
                         height: widget.height,
+                        cacheHeight: (widget.height * 2).round(),
+                        filterQuality: FilterQuality.low,
+                        gaplessPlayback: true,
                         errorBuilder: (_, _, _) =>
                             const ColoredBox(color: Colors.white12),
                       ),

@@ -28,6 +28,7 @@ pull `ffmpeg_kit_flutter_new_min` vs `ffmpeg_kit_flutter_new_min_gpl`.
 Review GPL-3.0 obligations before shipping.
 
 Docs: [licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md) ·
-[ComposerConfig](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/api/composer-config.md)
+[ComposerConfig](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/api/composer-config.md) ·
+[performance](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/performance.md)
 
 **Not on pub.dev yet.** Version 0.2.0.

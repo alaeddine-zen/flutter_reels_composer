@@ -12,6 +12,7 @@ enum ExportOperationKind {
   duet,
   stillImage,
   voiceover,
+  fade,
 }
 
 class ExportCapabilitySet {
@@ -29,6 +30,7 @@ class ExportCapabilitySet {
     ExportOperationKind.audioMix,
     ExportOperationKind.duet,
     ExportOperationKind.stillImage,
+    ExportOperationKind.fade,
   });
 
   bool supports(ExportOperationKind operation) => supported.contains(operation);

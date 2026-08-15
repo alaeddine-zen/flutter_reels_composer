@@ -2,12 +2,14 @@ import 'package:flutter/painting.dart';
 
 import '../../api/caption_engine.dart';
 import '../templates/reel_template.dart';
+import '../timeline/timeline_ops.dart';
 import 'audio_track.dart';
 import 'cover_choice.dart';
 import 'duet_layout.dart';
 import 'effect_instance.dart';
 import 'project_document.dart';
 import 'timeline_clip.dart';
+import 'video_settings.dart';
 import 'visual_layer.dart';
 
 sealed class ProjectMutation {
@@ -108,6 +110,18 @@ class UpdateClipSpeedMutation extends ProjectMutation {
   final double speed;
 }
 
+/// Cuts [clipId] at composition time [at]. [newClipId] is the right-hand piece.
+class SplitClipMutation extends ProjectMutation {
+  const SplitClipMutation({
+    required this.clipId,
+    required this.at,
+    required this.newClipId,
+  });
+  final String clipId;
+  final Duration at;
+  final String newClipId;
+}
+
 class SetCaptionCuesMutation extends ProjectMutation {
   const SetCaptionCuesMutation(this.cues);
   final List<CaptionCue> cues;
@@ -126,6 +140,21 @@ class SetDuetLayoutMutation extends ProjectMutation {
   const SetDuetLayoutMutation({required this.layout, this.parentVideoPath});
   final DuetLayout layout;
   final String? parentVideoPath;
+}
+
+class SetVideoSettingsMutation extends ProjectMutation {
+  const SetVideoSettingsMutation(this.settings);
+  final VideoSettings settings;
+}
+
+/// Dip-to-black fade at the end of [clipId]. [Duration.zero] is a hard cut.
+class SetClipTransitionMutation extends ProjectMutation {
+  const SetClipTransitionMutation({
+    required this.clipId,
+    required this.transitionOut,
+  });
+  final String clipId;
+  final Duration transitionOut;
 }
 
 ProjectDocument applyProjectMutation(
@@ -236,7 +265,7 @@ ProjectDocument applyProjectMutation(
           .where((t) => t.kind != AudioTrackKind.music)
           .map(
             (t) => t.kind == AudioTrackKind.original
-                ? t.copyWith(volume: originalVolume)
+                ? t.copyWith(volume: originalVolume.clamp(0.0, 1.0))
                 : t,
           )
           .toList();
@@ -248,7 +277,7 @@ ProjectDocument applyProjectMutation(
             kind: AudioTrackKind.music,
             musicId: musicId,
             sourcePath: sourcePath,
-            volume: volume,
+            volume: volume.clamp(0.0, 1.0),
             startOffset:
                 startOffset ?? previousMusic?.startOffset ?? Duration.zero,
           ),
@@ -267,6 +296,19 @@ ProjectDocument applyProjectMutation(
                 .toList(),
           )
           .touch();
+    case SplitClipMutation(:final clipId, :final at, :final newClipId):
+      final clips = [...project.clips];
+      final index = clips.indexWhere((c) => c.id == clipId);
+      if (index < 0) return project;
+      final split = splitLegacyClip(
+        clip: clips[index],
+        prefix: prefixBeforeClip(clips, index),
+        at: at,
+        newClipId: newClipId,
+      );
+      if (split == null) return project;
+      clips.replaceRange(index, index + 1, [split.left, split.right]);
+      return project.copyWith(clips: clips).touch();
     case SetCaptionCuesMutation(:final cues):
       final kept = project.layers
           .where((l) => l.role != VisualLayer.roleCaption)
@@ -356,6 +398,22 @@ ProjectDocument applyProjectMutation(
               if (parentVideoPath case final String path)
                 'parentVideoPath': path,
             },
+          )
+          .touch();
+    case SetVideoSettingsMutation(:final settings):
+      return project.copyWith(settings: settings).touch();
+    case SetClipTransitionMutation(:final clipId, :final transitionOut):
+      var fade = transitionOut;
+      if (fade.isNegative) fade = Duration.zero;
+      const maxFade = Duration(seconds: 1);
+      if (fade > maxFade) fade = maxFade;
+      return project
+          .copyWith(
+            clips: project.clips
+                .map(
+                  (c) => c.id == clipId ? c.copyWith(transitionOut: fade) : c,
+                )
+                .toList(),
           )
           .touch();
   }

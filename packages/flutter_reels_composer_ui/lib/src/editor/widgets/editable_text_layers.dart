@@ -8,14 +8,14 @@ import 'styled_overlay_text.dart';
 class EditableTextLayers extends StatefulWidget {
   const EditableTextLayers({
     super.key,
-    required this.engine,
+    required this.controller,
     required this.project,
     this.selectedId,
     this.onSelected,
     this.position,
   });
 
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final String? selectedId;
   final ValueChanged<String?>? onSelected;
@@ -40,12 +40,13 @@ class _EditableTextLayersState extends State<EditableTextLayers> {
   }
 
   Future<void> _update(VisualLayer layer) async {
-    await widget.engine.applyMutation(UpdateLayerMutation(layer));
+    await widget.controller.applyLive(UpdateLayerMutation(layer));
   }
 
   Future<void> _delete(String id) async {
     HapticFeedback.mediumImpact();
-    await widget.engine.applyMutation(RemoveLayerMutation(id));
+    widget.controller.endLive();
+    await widget.controller.apply(RemoveLayerMutation(id));
     if (widget.selectedId == id) {
       widget.onSelected?.call(null);
     }
@@ -118,7 +119,10 @@ class _EditableTextLayersState extends State<EditableTextLayers> {
                         current.copyWith(normalizedPosition: Offset(nx, ny)),
                       );
                     },
-                    onScaleEnd: (_) => _draggingId = null,
+                    onScaleEnd: (_) {
+                      _draggingId = null;
+                      widget.controller.endLive();
+                    },
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [

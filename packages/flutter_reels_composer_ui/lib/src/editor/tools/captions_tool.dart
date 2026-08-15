@@ -38,7 +38,7 @@ class CaptionsToolPanel extends StatefulWidget {
   const CaptionsToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     required this.captionEngine,
     this.preview,
@@ -47,7 +47,7 @@ class CaptionsToolPanel extends StatefulWidget {
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final CaptionEngine captionEngine;
   final PreviewPort? preview;
@@ -96,7 +96,7 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
         );
         return;
       }
-      await widget.engine.applyMutation(SetCaptionCuesMutation(cues));
+      await widget.controller.apply(SetCaptionCuesMutation(cues));
       widget.onGenerated?.call();
       await widget.preview?.seek(cues.first.start);
     } finally {
@@ -134,13 +134,13 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
         ),
       );
     }
-    await widget.engine.applyMutation(SetCaptionCuesMutation(cues));
+    await widget.controller.apply(SetCaptionCuesMutation(cues));
     widget.onGenerated?.call();
     await widget.preview?.seek(cues.first.start);
   }
 
   Future<void> _clear() async {
-    await widget.engine.applyMutation(const SetCaptionCuesMutation([]));
+    await widget.controller.apply(const SetCaptionCuesMutation([]));
   }
 
   Future<void> _seekTo(VisualLayer layer) async {
@@ -172,23 +172,25 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _busy ? null : _generate,
-                  icon: _busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome, size: 18),
-                  label: Text(context.composerL10n.text('generate')),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: widget.theme.accent,
+              if (widget.captionEngine.canTranscribe) ...[
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _busy ? null : _generate,
+                    icon: _busy
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome, size: 18),
+                    label: Text(context.composerL10n.text('generate')),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: widget.theme.accent,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               TextButton(
                 onPressed: _captions.isEmpty ? null : _clear,
                 child: const Text('Effacer'),
