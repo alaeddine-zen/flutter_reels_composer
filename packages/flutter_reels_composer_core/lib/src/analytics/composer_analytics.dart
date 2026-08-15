@@ -12,6 +12,8 @@ enum ComposerAnalyticsEventType {
   speedChanged,
   captionsGenerated,
   templateApplied,
+  undo,
+  redo,
   effectPackLoadFailed,
   templateCatalogLoadFailed,
   duetStarted,

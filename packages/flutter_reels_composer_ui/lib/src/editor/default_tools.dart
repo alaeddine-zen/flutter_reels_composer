@@ -42,7 +42,7 @@ class TrimEditorTool implements EditorTool {
     return _PanelShell(
       child: TrimToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         preview: preview,
         frameExtractor: ctx.config.frameExtractor,
@@ -67,7 +67,7 @@ class FilterEditorTool implements EditorTool {
     return _PanelShell(
       child: FilterToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         selectedId: ctx.project.activeFilterId,
         intensity: ctx.project.activeFilterIntensity,
         frameExtractor: ctx.config.frameExtractor,
@@ -95,7 +95,7 @@ class TextEditorTool implements EditorTool {
     return _PanelShell(
       child: TextToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         selectedLayerId: ctx.selectedLayerId,
         onSelectedLayerId: ctx.onSelectedLayerId,
@@ -119,7 +119,7 @@ class AudioEditorTool implements EditorTool {
   Widget buildPanel(EditorToolContext ctx) {
     return AudioToolPanel(
       theme: ctx.theme,
-      engine: ctx.engine,
+      controller: ctx.controller,
       catalog: ctx.config.musicCatalog,
       selectedMusicId: ctx.project.audioTracks
           .where((t) => t.kind == AudioTrackKind.music)
@@ -147,7 +147,7 @@ class CoverEditorTool implements EditorTool {
     return _PanelShell(
       child: CoverToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         preview: preview,
         frameExtractor: ctx.config.frameExtractor,
@@ -173,7 +173,7 @@ class SpeedEditorTool implements EditorTool {
     return _PanelShell(
       child: SpeedToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         preview: preview,
         onChanged: (speed) {
@@ -204,7 +204,7 @@ class CaptionsEditorTool implements EditorTool {
     return _PanelShell(
       child: CaptionsToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         captionEngine: ctx.config.captionEngine,
         preview: ctx.preview,
@@ -236,7 +236,7 @@ class TemplateEditorTool implements EditorTool {
     return _PanelShell(
       child: TemplateToolPanel(
         theme: ctx.theme,
-        engine: ctx.engine,
+        controller: ctx.controller,
         project: ctx.project,
         catalog: ctx.config.templateCatalog.templates.isEmpty
             ? TemplateCatalog.bundled

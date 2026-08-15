@@ -1,3 +1,8 @@
+## Unreleased
+
+- Wire editor tools through `ComposerController.apply` / `applyLive`.
+- Add undo / redo in the editor (buttons + Ctrl/Cmd+Z).
+
 ## 0.2.0
 
 - Add camera, gallery, and editor pages plus the default tool rail.

@@ -13,6 +13,8 @@ is unchanged.
 - Preview and FFmpeg share `ColorGrade` (4×5 ColorMatrix, not `.cube`)
 - `ExportCapabilitySet` — unsupported ops fail explicitly
 - `FfmpegFilters` in core is deprecated (helpers live in export packages)
+- Editor undo/redo: tools call `ComposerController.apply` / `applyLive` ;
+  gestures (trim, intensity, drag texte) coalescent en une entrée d'historique
 
 ## 0.2.0
 

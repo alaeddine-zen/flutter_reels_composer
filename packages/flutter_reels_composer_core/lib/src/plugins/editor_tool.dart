@@ -7,6 +7,7 @@ import '../contracts/composer_engine.dart';
 import '../controller/composer_controller.dart';
 import '../contracts/preview_port.dart';
 import '../domain/project/project_document.dart';
+import '../domain/project/project_mutation.dart';
 
 class EditorToolContext {
   const EditorToolContext({
@@ -21,6 +22,7 @@ class EditorToolContext {
     this.onClose,
   });
 
+  /// Records undo. Built-in tools and host extras must use this for edits.
   final ComposerController controller;
   final ProjectDocument project;
   final PreviewPort? preview;
@@ -32,6 +34,15 @@ class EditorToolContext {
   final VoidCallback? onClose;
 
   ComposerEngine get engine => controller.engine;
+
+  /// Discrete edit that records undo. Prefer this over [engine].applyMutation.
+  Future<void> apply(ProjectMutation mutation) => controller.apply(mutation);
+
+  /// Continuous gesture (slider / drag). Pair with [endLive] on pointer-up.
+  Future<void> applyLive(ProjectMutation mutation) =>
+      controller.applyLive(mutation);
+
+  void endLive() => controller.endLive();
 }
 
 /// Minimal strings a tool may need. Host UI supplies a richer l10n object.
@@ -54,6 +65,9 @@ extension ComposerToolL10nInterpolation on ComposerToolL10n {
 }
 
 /// One editor tool. Register extras via [EditorToolRegistry] / config.extraTools.
+///
+/// Mutate the project through [EditorToolContext.apply] /
+/// [EditorToolContext.applyLive], not [ComposerEngine.applyMutation].
 abstract class EditorTool {
   String get id;
   ComposerFeature get feature;

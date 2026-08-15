@@ -10,7 +10,7 @@ class TextToolPanel extends StatefulWidget {
   const TextToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     this.selectedLayerId,
     this.onSelectedLayerId,
@@ -18,7 +18,7 @@ class TextToolPanel extends StatefulWidget {
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final String? selectedLayerId;
   final ValueChanged<String?>? onSelectedLayerId;
@@ -113,7 +113,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
     setState(() => _color = color);
     final layer = _selected;
     if (layer == null) return;
-    await widget.engine.applyMutation(
+    await widget.controller.apply(
       UpdateLayerMutation(layer.copyWith(colorValue: color)),
     );
   }
@@ -122,7 +122,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
     setState(() => _fontSize = size);
     final layer = _selected;
     if (layer == null) return;
-    await widget.engine.applyMutation(
+    await widget.controller.applyLive(
       UpdateLayerMutation(layer.copyWith(fontSize: size)),
     );
   }
@@ -132,7 +132,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
     setState(() => _backdrop = backdrop);
     final layer = _selected;
     if (layer == null) return;
-    await widget.engine.applyMutation(
+    await widget.controller.apply(
       UpdateLayerMutation(layer.copyWith(textBackdrop: backdrop)),
     );
   }
@@ -143,7 +143,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
 
     final existing = _selected;
     if (existing != null) {
-      await widget.engine.applyMutation(
+      await widget.controller.apply(
         UpdateLayerMutation(
           existing.copyWith(
             text: text,
@@ -167,7 +167,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
       return;
     }
     final id = const Uuid().v4();
-    await widget.engine.applyMutation(
+    await widget.controller.apply(
       AddTextLayerMutation(
         layerId: id,
         text: text,
@@ -183,7 +183,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
     final layer = _selected;
     if (layer == null) return;
     HapticFeedback.mediumImpact();
-    await widget.engine.applyMutation(RemoveLayerMutation(layer.id));
+    await widget.controller.apply(RemoveLayerMutation(layer.id));
     widget.onClearSelection?.call();
     _controller.clear();
     setState(() {
@@ -269,7 +269,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
                     // Live-update overlay while typing (trimmed empty ignored).
                     final next = value.trimRight();
                     if (next.isEmpty) return;
-                    widget.engine.applyMutation(
+                    widget.controller.applyLive(
                       UpdateLayerMutation(
                         layer.copyWith(
                           text: next,
@@ -280,7 +280,10 @@ class _TextToolPanelState extends State<TextToolPanel> {
                       ),
                     );
                   },
-                  onSubmitted: (_) => _commit(),
+                  onSubmitted: (_) {
+                    widget.controller.endLive();
+                    _commit();
+                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -330,6 +333,7 @@ class _TextToolPanelState extends State<TextToolPanel> {
                   activeColor: widget.theme.accent,
                   inactiveColor: Colors.white24,
                   onChanged: _applyFontSize,
+                  onChangeEnd: (_) => widget.controller.endLive(),
                 ),
               ),
               SizedBox(

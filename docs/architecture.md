@@ -47,8 +47,9 @@ frame.
 
 ## Project model
 
-`ProjectDocument` is immutable (JSON schema **v3**). Edits go through
-`ComposerEngine.applyMutation` with a `ProjectMutation`.
+`ProjectDocument` is immutable (JSON schema **v3**). Editor UI edits go
+through `ComposerController.apply` / `applyLive` (undo/redo). The engine
+still applies a `ProjectMutation` underneath.
 
 `Timeline.fromDocument` and `RenderGraph.fromProject` are **derived views** —
 not a second store. Preview and FFmpeg export consume the same graph.

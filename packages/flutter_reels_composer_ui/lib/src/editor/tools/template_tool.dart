@@ -8,14 +8,14 @@ class TemplateToolPanel extends StatelessWidget {
   const TemplateToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     required this.catalog,
     this.onApplied,
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final TemplateCatalog catalog;
   final ValueChanged<ReelTemplate>? onApplied;
@@ -51,7 +51,7 @@ class TemplateToolPanel extends StatelessWidget {
                   return GestureDetector(
                     onTap: () async {
                       HapticFeedback.selectionClick();
-                      await engine.applyMutation(const ClearTemplateMutation());
+                      await controller.apply(const ClearTemplateMutation());
                     },
                     child: SizedBox(
                       width: 92,
@@ -94,7 +94,7 @@ class TemplateToolPanel extends StatelessWidget {
                 return GestureDetector(
                   onTap: () async {
                     HapticFeedback.selectionClick();
-                    await engine.applyMutation(ApplyTemplateMutation(t));
+                    await controller.apply(ApplyTemplateMutation(t));
                     onApplied?.call(t);
                   },
                   child: SizedBox(

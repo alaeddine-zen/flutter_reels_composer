@@ -8,14 +8,14 @@ class CoverToolPanel extends StatelessWidget {
   const CoverToolPanel({
     super.key,
     required this.theme,
-    required this.engine,
+    required this.controller,
     required this.project,
     required this.preview,
     this.frameExtractor = const NoopFrameExtractor(),
   });
 
   final ComposerTheme theme;
-  final ComposerEngine engine;
+  final ComposerController controller;
   final ProjectDocument project;
   final PreviewPort preview;
   final FrameExtractorPort frameExtractor;
@@ -99,18 +99,19 @@ class CoverToolPanel extends StatelessWidget {
             onChangeStart: (_) => preview.pause(),
             onChanged: (v) {
               final offset = Duration(milliseconds: v.round());
-              engine.applyMutation(
+              controller.applyLive(
                 SetCoverMutation(CoverChoice(timeOffset: offset)),
               );
               preview.seek(offset);
             },
+            onChangeEnd: (_) => controller.endLive(),
           ),
           Align(
             alignment: Alignment.center,
             child: TextButton.icon(
               onPressed: () {
                 final offset = preview.position;
-                engine.applyMutation(
+                controller.apply(
                   SetCoverMutation(CoverChoice(timeOffset: offset)),
                 );
               },
