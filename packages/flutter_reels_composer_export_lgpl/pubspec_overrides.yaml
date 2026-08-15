@@ -1,0 +1,3 @@
+dependency_overrides:
+  flutter_reels_composer_core:
+    path: ../flutter_reels_composer_core

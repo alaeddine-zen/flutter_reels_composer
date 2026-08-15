@@ -1,0 +1,22 @@
+name: flutter_reels_composer_example
+description: Example host for Flutter Reels Composer.
+publish_to: none
+version: 0.2.0
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_reels_composer:
+    path: ../packages/flutter_reels_composer
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

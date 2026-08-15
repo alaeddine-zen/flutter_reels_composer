@@ -1,0 +1,29 @@
+name: flutter_reels_composer
+description: Drop-in TikTok/Snap-style video composer for Flutter. Open the full camera-to-export flow in a few lines.
+version: 0.2.0
+homepage: https://github.com/allochat/flutter_reels_composer
+repository: https://github.com/allochat/flutter_reels_composer
+issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+license: MIT
+topics: [video-editor, camera, reels, social-media, ffmpeg]
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+platforms:
+  android:
+  ios:
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_reels_composer_core: ^0.2.0
+  flutter_reels_composer_ui: ^0.2.0
+  flutter_reels_composer_local: ^0.2.0
+  flutter_reels_composer_export_lgpl: ^0.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

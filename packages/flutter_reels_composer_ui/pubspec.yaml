@@ -1,0 +1,35 @@
+name: flutter_reels_composer_ui
+description: Composable Snap/TikTok-style UI for Flutter Reels Composer.
+version: 0.2.0
+homepage: https://github.com/allochat/flutter_reels_composer
+repository: https://github.com/allochat/flutter_reels_composer
+issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+license: MIT
+topics: [video-editor, reels, camera, social-media]
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+platforms:
+  android:
+  ios:
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_reels_composer_core: ^0.2.0
+  uuid: ^4.5.1
+  just_audio: ^0.10.5
+  video_player: ^2.10.1
+  permission_handler: ^12.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  assets:
+    - assets/effects/effects_manifest.json
+    - assets/templates/templates.json

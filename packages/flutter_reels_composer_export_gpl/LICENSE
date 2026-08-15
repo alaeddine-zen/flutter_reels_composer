@@ -1,0 +1,11 @@
+SPDX-License-Identifier: GPL-3.0-only
+
+Copyright (c) 2026 AlloChat
+
+This package is licensed under the GNU General Public License, version 3 only.
+The complete license text is available at:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+This package also depends on GPL-enabled FFmpeg binaries, including x264.
+Distribution of an application containing this package must comply with
+GPL-3.0.

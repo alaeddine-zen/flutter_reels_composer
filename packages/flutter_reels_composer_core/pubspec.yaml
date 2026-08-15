@@ -1,0 +1,23 @@
+name: flutter_reels_composer_core
+description: Domain, contracts and extension points for Flutter Reels Composer.
+version: 0.2.0
+homepage: https://github.com/allochat/flutter_reels_composer
+repository: https://github.com/allochat/flutter_reels_composer
+issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+license: MIT
+topics: [video-editor, reels, media, extensibility]
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  equatable: ^2.0.5
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

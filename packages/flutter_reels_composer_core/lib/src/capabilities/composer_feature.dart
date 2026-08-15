@@ -1,0 +1,33 @@
+enum ComposerFeature {
+  recordVideo,
+  importGallery,
+  trim,
+  colorFilters,
+  textOverlays,
+  musicMix,
+  cover,
+  speed,
+  multiClip,
+  stickers,
+  beauty,
+  arMasks,
+  greenScreen,
+  duetPip,
+  templates,
+  aiCaptions,
+}
+
+const Set<ComposerFeature> kDefaultV1Features = {
+  ComposerFeature.recordVideo,
+  ComposerFeature.importGallery,
+  ComposerFeature.trim,
+  ComposerFeature.colorFilters,
+  ComposerFeature.textOverlays,
+  ComposerFeature.musicMix,
+  ComposerFeature.cover,
+  ComposerFeature.multiClip,
+  ComposerFeature.speed,
+  ComposerFeature.templates,
+  ComposerFeature.aiCaptions,
+  ComposerFeature.duetPip,
+};

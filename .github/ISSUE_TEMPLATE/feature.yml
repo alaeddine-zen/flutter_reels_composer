@@ -1,0 +1,49 @@
+name: Feature request
+description: Propose an enhancement or new EditorTool / port
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [docs/extensibility.md](https://github.com/allochat/flutter_reels_composer/blob/main/docs/extensibility.md)
+        first — many customizations are already host-side (`extraTools`, catalogs, `ExportPort`).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible with the current API?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: API sketch, tool id, or port you would add.
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Where should this live?
+      options:
+        - Host app (extraTools / catalogs / custom ExportPort)
+        - flutter_reels_composer_core
+        - flutter_reels_composer_ui
+        - flutter_reels_composer_local
+        - LGPL export
+        - GPL export
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: license
+    attributes:
+      label: License impact
+      options:
+        - label: This does not require combining the MIT and GPL FFmpeg facades.
+          required: true

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "intro_trend",
+      "name": "Trend intro",
+      "filterId": "vivid",
+      "clipSlots": 1,
+      "suggestedDurationMs": 15000,
+      "layers": [
+        { "text": "Write here", "nx": 0.5, "ny": 0.18, "fontSize": 32, "textBackdrop": "stroke" }
+      ]
+    },
+    {
+      "id": "punchline",
+      "name": "Punchline",
+      "filterId": "cinema",
+      "layers": [
+        { "text": "Your punchline", "nx": 0.5, "ny": 0.45, "fontSize": 36, "textBackdrop": "stroke" }
+      ]
+    },
+    {
+      "id": "recap_3",
+      "name": "3-clip recap",
+      "clipSlots": 3,
+      "suggestedDurationMs": 30000,
+      "layers": [
+        { "text": "1", "nx": 0.12, "ny": 0.12, "fontSize": 22 },
+        { "text": "2", "nx": 0.12, "ny": 0.45, "fontSize": 22 },
+        { "text": "3", "nx": 0.12, "ny": 0.78, "fontSize": 22 }
+      ]
+    },
+    {
+      "id": "slow_mo",
+      "name": "Slow-mo",
+      "filterId": "cinema",
+      "speed": 0.5,
+      "layers": [
+        { "text": "Slow motion", "nx": 0.5, "ny": 0.82, "fontSize": 22, "textBackdrop": "fill" }
+      ]
+    },
+    {
+      "id": "quote",
+      "name": "Quote",
+      "filterId": "fade",
+      "layers": [
+        { "text": "\"Your quote\"", "nx": 0.5, "ny": 0.42, "fontSize": 28, "textBackdrop": "fill" }
+      ]
+    },
+    {
+      "id": "duet_ready",
+      "name": "Duet-ready",
+      "duetLayout": "split",
+      "layers": [
+        { "text": "React", "nx": 0.5, "ny": 0.72, "fontSize": 26 }
+      ]
+    }
+  ]
+}

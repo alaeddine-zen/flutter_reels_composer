@@ -1,0 +1,292 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
+
+class ComposerL10n implements ComposerToolL10n {
+  const ComposerL10n(this.languageCode);
+
+  factory ComposerL10n.resolve(Locale? locale) {
+    final code = locale?.languageCode ?? 'en';
+    return ComposerL10n(code);
+  }
+
+  final String languageCode;
+
+  static const _en = {
+    'resumeDraft': 'Resume a draft?',
+    'newReel': 'New Reel',
+    'draft': 'Draft',
+    'ago': 'ago',
+    'retake': 'Retake?',
+    'retakeBody':
+        'You can find this draft the next time you open the composer.',
+    'stay': 'Stay',
+    'leave': 'Leave',
+    'leaveConfirm': 'Leave?',
+    'next': 'Next',
+    'cancel': 'Cancel',
+    'exporting': 'Preparing',
+    'exportFailed': 'Export failed',
+    'missingExporter': 'No export adapter is configured.',
+    'trim': 'Trim',
+    'filter': 'Filter',
+    'text': 'Text',
+    'music': 'Sound',
+    'cover': 'Cover',
+    'speed': 'Speed',
+    'captions': 'Captions',
+    'templates': 'Templates',
+    'effects': 'Effects',
+    'beauty': 'Beauty',
+    'stickers': 'Stickers',
+    'none': 'None',
+    'addSound': 'Add sound',
+    'chooseFromDevice': 'Choose from device',
+    'discardRecording': 'The current video will be lost.',
+    'discardSegments': 'The current segments will be lost.',
+    'cameraPermission': 'Allow camera and microphone access to create a Reel.',
+    'allow': 'Allow',
+    'countdown': 'Countdown',
+    'countdownEnabled': 'Countdown enabled',
+    'parentUnavailable':
+        'Parent video unavailable — your response will be published without split.',
+    'cameraPreparing': 'Preparing camera…',
+    'mediaReadError': 'Unable to read this media.',
+    'preview': 'Preview',
+    'retry': 'Retry',
+    'photoClip': 'Photo converted to a {seconds}s clip',
+    'videoImportError': 'Unable to import the video.',
+    'photoConvertError': 'Unable to convert this photo.',
+    'audioImportError': 'Unable to import this sound.',
+    'noMediaImported': 'No media imported.',
+    'gallery': 'Gallery',
+    'videos': 'Videos',
+    'photos': 'Photos',
+    'duetHint': 'Duet — your video will be composed with the parent.',
+    'noVideo': 'No video',
+    'noPhoto': 'No photo',
+    'preparing': 'Preparing…',
+    'addClips': 'Add {count} clip(s)',
+    'galleryPermission': 'Allow gallery access to import media.',
+    'openSettings': 'Open settings',
+    'editText': 'Edit text',
+    'addText': 'Add text',
+    'newText': 'New',
+    'delete': 'Delete',
+    'writeSomething': 'Write something',
+    'textNumber': 'Text {number}',
+    'noFilter': 'No filters',
+    'intensity': 'Intensity',
+    'kept': 'kept',
+    'generate': 'Generate',
+    'split': 'Split',
+    'original': 'Original',
+    'start': 'Start',
+    'audioImportHint': 'Tip: import audio from your phone.',
+    'noClip': 'No clips',
+    'selectedCount': '{count} selected',
+    'speedClip': 'Speed · clip {current}/{total}',
+  };
+
+  static const _fr = {
+    'resumeDraft': 'Reprendre un brouillon ?',
+    'newReel': 'Nouveau Reel',
+    'draft': 'Brouillon',
+    'ago': 'il y a',
+    'retake': 'Reprendre ?',
+    'retakeBody': 'Tu pourras retrouver ce brouillon au prochain lancement.',
+    'stay': 'Rester',
+    'leave': 'Quitter',
+    'leaveConfirm': 'Quitter ?',
+    'next': 'Suivant',
+    'cancel': 'Annuler',
+    'exporting': 'Préparation',
+    'exportFailed': 'Échec de l’export',
+    'missingExporter': 'Aucun adaptateur d’export n’est configuré.',
+    'trim': 'Couper',
+    'filter': 'Filtre',
+    'text': 'Texte',
+    'music': 'Son',
+    'cover': 'Cover',
+    'speed': 'Vitesse',
+    'captions': 'Légendes',
+    'templates': 'Templates',
+    'effects': 'Effets',
+    'beauty': 'Beauté',
+    'stickers': 'Stickers',
+    'none': 'Aucun',
+    'addSound': 'Ajouter un son',
+    'chooseFromDevice': 'Choisir depuis l’appareil',
+    'discardRecording': 'La vidéo en cours sera perdue.',
+    'discardSegments': 'Les segments en cours seront perdus.',
+    'cameraPermission': 'Autorise la caméra et le micro pour créer un Reel.',
+    'allow': 'Autoriser',
+    'countdown': 'Compte à rebours',
+    'countdownEnabled': 'Compte à rebours activé',
+    'parentUnavailable':
+        'Vidéo parent indisponible — ta réponse sera publiée sans split.',
+    'cameraPreparing': 'Préparation caméra…',
+    'mediaReadError': 'Impossible de lire ce média.',
+    'preview': 'Aperçu',
+    'retry': 'Réessayer',
+    'photoClip': 'Photo convertie en clip de {seconds}s',
+    'videoImportError': 'Impossible d’importer la vidéo.',
+    'photoConvertError': 'Impossible de convertir la photo.',
+    'audioImportError': 'Impossible d’importer ce son.',
+    'noMediaImported': 'Aucun média importé.',
+    'gallery': 'Galerie',
+    'videos': 'Vidéos',
+    'photos': 'Photos',
+    'duetHint': 'Duet — ta vidéo sera composée avec le parent.',
+    'noVideo': 'Aucune vidéo',
+    'noPhoto': 'Aucune photo',
+    'preparing': 'Préparation…',
+    'addClips': 'Ajouter {count} clip(s)',
+    'galleryPermission':
+        'Autorise l’accès à la galerie pour importer un média.',
+    'openSettings': 'Ouvrir les réglages',
+    'editText': 'Modifier le texte',
+    'addText': 'Ajouter du texte',
+    'newText': 'Nouveau',
+    'delete': 'Supprimer',
+    'writeSomething': 'Écrire quelque chose',
+    'textNumber': 'Texte {number}',
+    'noFilter': 'Aucun filtre',
+    'intensity': 'Intensité',
+    'kept': 'gardés',
+    'generate': 'Générer',
+    'split': 'Découper',
+    'original': 'Original',
+    'start': 'Début',
+    'audioImportHint': 'Astuce : importe un son de ton téléphone.',
+    'noClip': 'Aucun clip',
+    'selectedCount': '{count} sélectionné(s)',
+    'speedClip': 'Vitesse · clip {current}/{total}',
+  };
+
+  static const _ar = {
+    'resumeDraft': 'استئناف مسودة؟',
+    'newReel': 'ريل جديد',
+    'draft': 'مسودة',
+    'ago': 'منذ',
+    'retake': 'إعادة التصوير؟',
+    'retakeBody': 'يمكنك العثور على هذه المسودة في المرة القادمة.',
+    'stay': 'البقاء',
+    'leave': 'مغادرة',
+    'leaveConfirm': 'مغادرة؟',
+    'next': 'التالي',
+    'cancel': 'إلغاء',
+    'exporting': 'جارٍ التحضير',
+    'exportFailed': 'فشل التصدير',
+    'missingExporter': 'لم يتم إعداد محول تصدير.',
+    'trim': 'قص',
+    'filter': 'فلتر',
+    'text': 'نص',
+    'music': 'صوت',
+    'cover': 'غلاف',
+    'speed': 'سرعة',
+    'captions': 'ترجمة',
+    'templates': 'قوالب',
+    'effects': 'تأثيرات',
+    'beauty': 'تجميل',
+    'stickers': 'ملصقات',
+    'none': 'لا شيء',
+    'addSound': 'إضافة صوت',
+    'chooseFromDevice': 'اختيار من الجهاز',
+    'discardRecording': 'سيتم فقدان الفيديو الحالي.',
+    'discardSegments': 'سيتم فقدان المقاطع الحالية.',
+    'cameraPermission': 'اسمح للكاميرا والميكروفون لإنشاء ريل.',
+    'allow': 'سماح',
+    'countdown': 'العد التنازلي',
+    'countdownEnabled': 'العد التنازلي مفعّل',
+    'parentUnavailable': 'فيديو الأصل غير متاح — سيتم النشر بدون تقسيم.',
+    'cameraPreparing': 'جارٍ تجهيز الكاميرا…',
+    'mediaReadError': 'تعذر قراءة هذا الوسائط.',
+    'preview': 'معاينة',
+    'retry': 'إعادة المحاولة',
+    'photoClip': 'تم تحويل الصورة إلى مقطع {seconds} ثوانٍ',
+    'videoImportError': 'تعذر استيراد الفيديو.',
+    'photoConvertError': 'تعذر تحويل هذه الصورة.',
+    'audioImportError': 'تعذر استيراد هذا الصوت.',
+    'noMediaImported': 'لم يتم استيراد وسائط.',
+    'gallery': 'المعرض',
+    'videos': 'فيديوهات',
+    'photos': 'صور',
+    'duetHint': 'دويتو — سيتم دمج فيديوك مع الأصل.',
+    'noVideo': 'لا توجد فيديوهات',
+    'noPhoto': 'لا توجد صور',
+    'preparing': 'جارٍ التحضير…',
+    'addClips': 'إضافة {count} مقطع',
+    'galleryPermission': 'اسمح بالوصول للمعرض لاستيراد الوسائط.',
+    'openSettings': 'فتح الإعدادات',
+    'editText': 'تعديل النص',
+    'addText': 'إضافة نص',
+    'newText': 'جديد',
+    'delete': 'حذف',
+    'writeSomething': 'اكتب شيئًا',
+    'textNumber': 'نص {number}',
+    'noFilter': 'لا توجد فلاتر',
+    'intensity': 'الشدة',
+    'kept': 'محفوظ',
+    'generate': 'إنشاء',
+    'split': 'تقسيم',
+    'original': 'الأصلي',
+    'start': 'البداية',
+    'audioImportHint': 'نصيحة: استورد صوتًا من هاتفك.',
+    'noClip': 'لا توجد مقاطع',
+    'selectedCount': 'تم تحديد {count}',
+    'speedClip': 'السرعة · المقطع {current}/{total}',
+  };
+
+  @override
+  String text(String key) {
+    final table = switch (languageCode) {
+      'fr' => _fr,
+      'ar' => _ar,
+      _ => _en,
+    };
+    return table[key] ?? _en[key] ?? key;
+  }
+
+  @override
+  String toolLabel(ComposerFeature feature) {
+    return switch (feature) {
+      ComposerFeature.trim => text('trim'),
+      ComposerFeature.colorFilters => text('filter'),
+      ComposerFeature.textOverlays => text('text'),
+      ComposerFeature.musicMix => text('music'),
+      ComposerFeature.cover => text('cover'),
+      ComposerFeature.speed => text('speed'),
+      ComposerFeature.aiCaptions => text('captions'),
+      ComposerFeature.templates => text('templates'),
+      ComposerFeature.arMasks => text('effects'),
+      ComposerFeature.beauty => text('beauty'),
+      ComposerFeature.stickers => text('stickers'),
+      _ => feature.name,
+    };
+  }
+}
+
+class ComposerL10nScope extends InheritedWidget {
+  const ComposerL10nScope({
+    super.key,
+    required this.l10n,
+    required super.child,
+  });
+
+  final ComposerToolL10n l10n;
+
+  static ComposerToolL10n of(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<ComposerL10nScope>()
+            ?.l10n ??
+        const ComposerL10n('en');
+  }
+
+  @override
+  bool updateShouldNotify(ComposerL10nScope oldWidget) =>
+      oldWidget.l10n != l10n;
+}
+
+extension ComposerL10nBuildContext on BuildContext {
+  ComposerToolL10n get composerL10n => ComposerL10nScope.of(this);
+}

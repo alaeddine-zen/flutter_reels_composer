@@ -1,0 +1,75 @@
+name: Bug report
+description: Something does not work as documented
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Search existing issues first.
+        Security problems go to [Security Advisories](https://github.com/allochat/flutter_reels_composer/security/advisories/new), not here.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - flutter_reels_composer (MIT facade)
+        - flutter_reels_composer_gpl (GPL facade)
+        - flutter_reels_composer_core
+        - flutter_reels_composer_ui
+        - flutter_reels_composer_local
+        - flutter_reels_composer_export_lgpl
+        - flutter_reels_composer_export_gpl
+        - example
+        - unsure
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Android, iOS, Both, Unsure]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package version, git tag, or commit SHA (e.g. 0.2.0).
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the composer
+        2. Import a clip
+        3. Export
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: flutter doctor -v
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: FFmpeg / export / permission logs if relevant. Redact paths and tokens.
+      render: text

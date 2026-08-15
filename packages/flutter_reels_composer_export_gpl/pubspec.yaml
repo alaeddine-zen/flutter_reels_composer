@@ -1,0 +1,29 @@
+name: flutter_reels_composer_export_gpl
+description: Optional FFmpeg GPL export adapter. Enable only if you accept GPL obligations.
+version: 0.2.0
+homepage: https://github.com/allochat/flutter_reels_composer
+repository: https://github.com/allochat/flutter_reels_composer
+issue_tracker: https://github.com/allochat/flutter_reels_composer/issues
+license: GPL-3.0
+topics: [video-editor, ffmpeg, reels, export]
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
+
+platforms:
+  android:
+  ios:
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_reels_composer_core: ^0.2.0
+  ffmpeg_kit_flutter_new_min_gpl: ^2.6.2
+  path: ^1.9.1
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

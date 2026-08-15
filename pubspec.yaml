@@ -1,0 +1,9 @@
+name: flutter_reels_composer_workspace
+description: Documentation and tooling root for Flutter Reels Composer.
+publish_to: none
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
