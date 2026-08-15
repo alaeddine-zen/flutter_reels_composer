@@ -1,3 +1,7 @@
+## Unreleased
+
+- Preview color uses `ColorGrade` (same matrix as export).
+
 ## 0.2.0
 
 - Add `LocalComposerEngine` (camera, gallery, preview).

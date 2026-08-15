@@ -1,7 +1,4 @@
-@Deprecated(
-  'FFmpeg helpers live in the export packages. '
-  'This class will be removed from core in 0.4.0.',
-)
+/// FFmpeg filter-graph helpers. Kept out of `flutter_reels_composer_core`.
 class FfmpegFilters {
   const FfmpegFilters._();
 

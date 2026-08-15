@@ -3,6 +3,17 @@
 All notable changes to this monorepo are listed here. Each publishable package
 also has its own `CHANGELOG.md`.
 
+## Unreleased
+
+Internal render-model foundation (schema v3). Host `FlutterReelsComposer.open`
+is unchanged.
+
+- `Timeline` / `VideoClip` / `ImageClip` / `RenderGraph` / `ExportRecipe`
+- Dual-write `timeline` JSON; v1/v2 drafts migrate
+- Preview and FFmpeg share `ColorGrade` (4×5 ColorMatrix, not `.cube`)
+- `ExportCapabilitySet` — unsupported ops fail explicitly
+- `FfmpegFilters` in core is deprecated (helpers live in export packages)
+
 ## 0.2.0
 
 Independent V2 monorepo. There is no compatibility layer with earlier in-app

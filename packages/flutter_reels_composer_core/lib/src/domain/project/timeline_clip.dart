@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+/// Discriminator for [TimelineClip] in schema v3. Defaults to [video].
+enum TimelineClipKind { video, image }
+
 class TimelineClip extends Equatable {
   const TimelineClip({
     required this.id,
@@ -8,6 +11,7 @@ class TimelineClip extends Equatable {
     this.trimStart = Duration.zero,
     Duration? trimEnd,
     this.speed = 1.0,
+    this.kind = TimelineClipKind.video,
   }) : trimEnd = trimEnd ?? sourceDuration;
 
   final String id;
@@ -16,6 +20,7 @@ class TimelineClip extends Equatable {
   final Duration trimStart;
   final Duration trimEnd;
   final double speed;
+  final TimelineClipKind kind;
 
   Duration get trimmedDuration {
     final raw = sourceSpan;
@@ -36,6 +41,7 @@ class TimelineClip extends Equatable {
     Duration? trimStart,
     Duration? trimEnd,
     double? speed,
+    TimelineClipKind? kind,
   }) {
     return TimelineClip(
       id: id ?? this.id,
@@ -44,6 +50,7 @@ class TimelineClip extends Equatable {
       trimStart: trimStart ?? this.trimStart,
       trimEnd: trimEnd ?? this.trimEnd,
       speed: speed ?? this.speed,
+      kind: kind ?? this.kind,
     );
   }
 
@@ -54,9 +61,11 @@ class TimelineClip extends Equatable {
     'trimStartMs': trimStart.inMilliseconds,
     'trimEndMs': trimEnd.inMilliseconds,
     'speed': speed,
+    'kind': kind.name,
   };
 
   factory TimelineClip.fromJson(Map<String, dynamic> json) {
+    final kindName = json['kind'] as String?;
     return TimelineClip(
       id: json['id'] as String,
       sourcePath: json['sourcePath'] as String,
@@ -64,6 +73,12 @@ class TimelineClip extends Equatable {
       trimStart: Duration(milliseconds: json['trimStartMs'] as int? ?? 0),
       trimEnd: Duration(milliseconds: json['trimEndMs'] as int),
       speed: (json['speed'] as num?)?.toDouble() ?? 1.0,
+      kind: kindName == null
+          ? TimelineClipKind.video
+          : TimelineClipKind.values.firstWhere(
+              (k) => k.name == kindName,
+              orElse: () => TimelineClipKind.video,
+            ),
     );
   }
 
@@ -75,5 +90,6 @@ class TimelineClip extends Equatable {
     trimStart,
     trimEnd,
     speed,
+    kind,
   ];
 }

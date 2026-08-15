@@ -6,6 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
+
 import 'duet_stage.dart';
 import 'styled_overlay_text.dart';
 
@@ -262,12 +263,7 @@ class LocalPreviewPort extends PreviewPort {
 
   List<double> _matrixForFilter() {
     if (_compareOriginal) return kIdentityColorMatrix;
-    final id = _project.activeFilterId ?? 'normal';
-    final desc = _registry[id];
-    final base = desc is LutColorEffectDescriptor
-        ? desc.matrix
-        : kIdentityColorMatrix;
-    return matrixWithIntensity(base, _project.activeFilterIntensity);
+    return ColorGrade.fromProject(_project, registry: _registry).matrix;
   }
 
   @override

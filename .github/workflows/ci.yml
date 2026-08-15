@@ -13,15 +13,27 @@ jobs:
         with:
           channel: stable
           cache: true
+      # dart format reads analysis_options.yaml, which includes
+      # package:flutter_lints/flutter.yaml. Without package_config that
+      # include fails and the formatter applies a different style.
+      - name: Fetch dependencies
+        run: |
+          for package in packages/*; do
+            (cd "$package" && flutter pub get)
+          done
+          (cd example && flutter pub get)
       - name: Format
         run: dart format --output=none --set-exit-if-changed packages example/lib
       - name: Analyze every package
         run: |
           for package in packages/*; do
-            (cd "$package" && flutter pub get && flutter analyze)
+            (cd "$package" && flutter analyze)
           done
       - name: Test core contracts
         working-directory: packages/flutter_reels_composer_core
+        run: flutter test
+      - name: Test LGPL color matrix compiler
+        working-directory: packages/flutter_reels_composer_export_lgpl
         run: flutter test
       - name: Test UI registry
         working-directory: packages/flutter_reels_composer_ui

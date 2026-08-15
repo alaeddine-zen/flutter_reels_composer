@@ -1,11 +1,13 @@
 import 'package:equatable/equatable.dart';
 import 'package:uuid/uuid.dart';
 
+import '../timeline/timeline.dart';
 import 'audio_track.dart';
 import 'cover_choice.dart';
 import 'duet_layout.dart';
 import 'effect_instance.dart';
 import 'schema.dart';
+import 'schema_migration.dart';
 import 'timeline_clip.dart';
 import 'video_settings.dart';
 import 'visual_layer.dart';
@@ -72,6 +74,9 @@ class ProjectDocument extends Equatable {
       (sum, c) => sum + c.trimmedDuration,
     );
   }
+
+  /// Structured view of clips / audio / overlays. Derived from the flat lists.
+  Timeline get timeline => Timeline.fromDocument(this);
 
   String? get primarySourcePath =>
       clips.isEmpty ? null : clips.first.sourcePath;
@@ -140,43 +145,51 @@ class ProjectDocument extends Equatable {
     'audioTracks': audioTracks.map((e) => e.toJson()).toList(),
     'effects': effects.map((e) => e.toJson()).toList(),
     'cover': cover.toJson(),
+    'timeline': Timeline.fromDocument(this).toJson(),
     'extras': extras,
     'updatedAt': updatedAt?.toIso8601String(),
   };
 
   factory ProjectDocument.fromJson(Map<String, dynamic> json) {
-    final version = json['schemaVersion'] as int? ?? 1;
-    if (version < 1 || version > kProjectSchemaVersion) {
-      throw UnsupportedProjectSchemaException(version);
+    final migrated = migrateProjectJson(json);
+    var clips = (migrated['clips'] as List? ?? const [])
+        .map((e) => TimelineClip.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    var layers = (migrated['layers'] as List? ?? const [])
+        .map((e) => VisualLayer.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    var audioTracks = (migrated['audioTracks'] as List? ?? const [])
+        .map((e) => AudioTrack.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    final timelineJson = migrated['timeline'];
+    if (timelineJson is Map && clips.isEmpty) {
+      final timelineMap = Map<String, dynamic>.from(timelineJson);
+      clips = clipsFromTimelineJson(timelineMap);
+      if (layers.isEmpty) layers = layersFromTimelineJson(timelineMap);
+      if (audioTracks.isEmpty) {
+        audioTracks = audioFromTimelineJson(timelineMap);
+      }
     }
     return ProjectDocument(
       schemaVersion: kProjectSchemaVersion,
-      id: json['id'] as String,
+      id: migrated['id'] as String,
       settings: VideoSettings.fromJson(
-        Map<String, dynamic>.from(json['settings'] as Map),
+        Map<String, dynamic>.from(migrated['settings'] as Map),
       ),
-      clips: (json['clips'] as List? ?? const [])
-          .map(
-            (e) => TimelineClip.fromJson(Map<String, dynamic>.from(e as Map)),
-          )
-          .toList(),
-      layers: (json['layers'] as List? ?? const [])
-          .map((e) => VisualLayer.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList(),
-      audioTracks: (json['audioTracks'] as List? ?? const [])
-          .map((e) => AudioTrack.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList(),
-      effects: (json['effects'] as List? ?? const [])
+      clips: clips,
+      layers: layers,
+      audioTracks: audioTracks,
+      effects: (migrated['effects'] as List? ?? const [])
           .map(
             (e) => EffectInstance.fromJson(Map<String, dynamic>.from(e as Map)),
           )
           .toList(),
       cover: CoverChoice.fromJson(
-        Map<String, dynamic>.from(json['cover'] as Map? ?? const {}),
+        Map<String, dynamic>.from(migrated['cover'] as Map? ?? const {}),
       ),
-      extras: Map<String, dynamic>.from(json['extras'] as Map? ?? const {}),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'] as String)
+      extras: Map<String, dynamic>.from(migrated['extras'] as Map? ?? const {}),
+      updatedAt: migrated['updatedAt'] != null
+          ? DateTime.tryParse(migrated['updatedAt'] as String)
           : null,
     );
   }
