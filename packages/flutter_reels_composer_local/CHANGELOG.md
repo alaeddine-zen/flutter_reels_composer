@@ -8,6 +8,8 @@
   fade/grade layers; detach the throttled video listener on clip change.
 - `FileDraftStore` skips `touch()` when stamped and skips media copy when
   the destination already matches source length.
+- Preview resyncs music when drift ≥ 120 ms; `setLooping(false)` pauses at
+  the end instead of a no-op. Duet parent load is generation-guarded.
 
 ## 0.2.0
 

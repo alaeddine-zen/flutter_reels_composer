@@ -6,6 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
 
+import 'media_copy.dart';
+
 class FileDraftStore implements DraftStore {
   FileDraftStore({this.folderName = 'reels_composer_drafts'});
 
@@ -25,18 +27,8 @@ class FileDraftStore implements DraftStore {
     return File(p.join(root.path, id, 'project.json'));
   }
 
-  bool _alreadyCopied(File source, File dest) {
-    if (source.path == dest.path) return true;
-    if (!dest.existsSync()) return false;
-    try {
-      return dest.lengthSync() == source.lengthSync();
-    } catch (_) {
-      return false;
-    }
-  }
-
   Future<void> _copyIfNeeded(File source, File dest) async {
-    if (_alreadyCopied(source, dest)) return;
+    if (destinationAlreadyHasCopy(source, dest)) return;
     await source.copy(dest.path);
   }
 

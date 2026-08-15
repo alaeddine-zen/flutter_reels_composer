@@ -13,6 +13,9 @@
 - `ExportCancelledException` / `MissingClipException` from exporters.
 - `CachedFrameExtractor` (LRU + serialized extract) and `ffmpegEscapePath`.
 - `MemoryDraftStore` keeps an existing `updatedAt` (autosave-friendly).
+- Preview clock helpers (`musicSeekTarget`, duet drift gates,
+  `prefetchTimelineThumbs`) with unit tests. `FakePreviewPort.setLooping`
+  stores the flag.
 
 ## 0.2.0
 

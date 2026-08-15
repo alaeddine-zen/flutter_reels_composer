@@ -47,6 +47,7 @@ export 'src/export/export_recipe.dart';
 export 'src/export/ffmpeg_filters.dart';
 export 'src/export/ffmpeg_path_escape.dart';
 export 'src/persistence/draft_store.dart';
+export 'src/preview/preview_clock.dart';
 export 'src/plugins/editor_tool.dart';
 export 'src/plugins/editor_tool_registry.dart';
 export 'src/render/color_grade.dart';

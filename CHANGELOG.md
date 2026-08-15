@@ -26,6 +26,8 @@ is unchanged.
 - Filmstrips: 8 frames source stables + `CachedFrameExtractor` (LRU, FFmpeg sérialisé)
 - Autosave: skip si `updatedAt` inchangé ; `FileDraftStore` ne recopie pas les médias identiques
 - Export: `executeAsync` complete callback ; `ffmpegEscapePath` (`\`, `"`, `$`, `` ` ``)
+- Horloges preview: resync musique ≥ 120 ms, duet sans seek à chaque tick, prefetch filmstrips
+- Guide [docs/verification.md](docs/verification.md) (tests + checks device)
 
 ## 0.2.0
 

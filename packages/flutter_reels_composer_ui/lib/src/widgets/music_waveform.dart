@@ -1,9 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
-/// Deterministic faux waveform (TikTok look) keyed by [seed].
-/// [progress] 0–1 highlights the played / selected start region.
+/// Start-offset meter for the music tool (not PCM / not a decoded waveform).
+///
+/// [progress] 0–1 is the selected [AudioTrack.startOffset] relative to the
+/// allowed window. Bar heights are equal so the chrome cannot be mistaken
+/// for audio analysis.
 class MusicWaveform extends StatelessWidget {
   const MusicWaveform({
     super.key,
@@ -14,6 +15,7 @@ class MusicWaveform extends StatelessWidget {
     this.barCount = 48,
   });
 
+  /// Kept for call-site compatibility; not used for bar heights.
   final String seed;
   final double progress;
   final double height;
@@ -22,19 +24,16 @@ class MusicWaveform extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rng = math.Random(seed.hashCode);
-    final bars = List<double>.generate(
-      barCount,
-      (_) => 0.25 + rng.nextDouble() * 0.75,
-    );
     final p = progress.clamp(0.0, 1.0);
+    final barHeight = height * 0.55;
 
     return SizedBox(
+      key: ValueKey<String>(seed),
       height: height,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          for (var i = 0; i < bars.length; i++)
+          for (var i = 0; i < barCount; i++)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 0.8),
@@ -42,9 +41,9 @@ class MusicWaveform extends StatelessWidget {
                   alignment: Alignment.center,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 80),
-                    height: height * bars[i],
+                    height: barHeight,
                     decoration: BoxDecoration(
-                      color: (i / bars.length) <= p ? accent : Colors.white24,
+                      color: (i / barCount) <= p ? accent : Colors.white24,
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),

@@ -584,9 +584,6 @@ class _ClipFilmstrip extends StatelessWidget {
   final FrameExtractorPort frameExtractor;
   final Color accent;
 
-  static const _thumbCount = 8;
-  static const _height = 56.0;
-
   @override
   Widget build(BuildContext context) {
     final strip = Filmstrip(
@@ -594,8 +591,8 @@ class _ClipFilmstrip extends StatelessWidget {
       frameExtractor: frameExtractor,
       start: Duration.zero,
       end: clip.sourceDuration,
-      height: _height,
-      count: _thumbCount,
+      height: kTimelineThumbHeight.toDouble(),
+      count: kTimelineThumbCount,
       accent: accent,
       stillImage: clip.kind == TimelineClipKind.image,
     );

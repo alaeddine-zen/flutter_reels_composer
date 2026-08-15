@@ -51,6 +51,7 @@ class _EditorPageState extends State<EditorPage> {
   Timer? _autosaveTimer;
   DateTime? _autosavedUpdatedAt;
   bool _autosavedWhileUnstamped = false;
+  String? _thumbKey;
 
   @override
   void initState() {
@@ -69,12 +70,25 @@ class _EditorPageState extends State<EditorPage> {
     // Start with no panel open — TikTok opens tools on demand.
     _selectedToolId = null;
     unawaited(_bootstrap());
+    widget.engine.projectListenable.addListener(_prefetchThumbs);
     final interval = widget.config.autosaveInterval;
     if (interval > Duration.zero) {
       _autosaveTimer = Timer.periodic(interval, (_) {
         unawaited(_autosaveDraft());
       });
     }
+  }
+
+  void _prefetchThumbs() {
+    final project = widget.engine.project;
+    final key = project.clips
+        .map((c) => '${c.sourcePath}|${c.sourceDuration.inMilliseconds}')
+        .join(';');
+    if (key == _thumbKey) return;
+    _thumbKey = key;
+    unawaited(
+      prefetchTimelineThumbs(widget.config.frameExtractor, project.clips),
+    );
   }
 
   Future<void> _autosaveDraft() async {
@@ -106,11 +120,13 @@ class _EditorPageState extends State<EditorPage> {
     final preview = widget.engine.attachPreview(widget.engine.project);
     _preview = preview;
     await preview.play();
+    _prefetchThumbs();
     if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    widget.engine.projectListenable.removeListener(_prefetchThumbs);
     _autosaveTimer?.cancel();
     final session = _exportSession;
     _exportSession = null;

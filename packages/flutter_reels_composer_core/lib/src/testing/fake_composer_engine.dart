@@ -290,6 +290,7 @@ class FakePreviewPort extends PreviewPort {
   ProjectDocument _project;
   bool _playing = false;
   Duration _position = Duration.zero;
+  bool looping = true;
 
   void updateProject(ProjectDocument project) {
     _project = project;
@@ -330,7 +331,9 @@ class FakePreviewPort extends PreviewPort {
   }
 
   @override
-  Future<void> setLooping(bool looping) async {}
+  Future<void> setLooping(bool looping) async {
+    this.looping = looping;
+  }
 
   @override
   Widget buildPreview({Key? key, bool showTextLayers = true}) =>

@@ -392,6 +392,7 @@ not on the MIT/GPL façades or the main UI barrel.
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Performance](docs/performance.md)
+- [Verification](docs/verification.md)
 - [Extensibility](docs/extensibility.md)
 - [ComposerConfig API](docs/api/composer-config.md)
 - [Permissions](docs/permissions.md)

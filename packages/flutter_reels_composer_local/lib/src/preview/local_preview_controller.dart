@@ -30,6 +30,8 @@ class LocalPreviewPort extends PreviewPort {
   ProjectDocument? _graphProject;
   DateTime? _lastUiNotify;
   VoidCallback? _throttledVideoListener;
+  bool _correctingMusic = false;
+  bool _loopComposition = true;
 
   static const _uiNotifyInterval = Duration(milliseconds: 50);
 
@@ -49,6 +51,35 @@ class LocalPreviewPort extends PreviewPort {
     }
     _lastUiNotify = DateTime.now();
     notifyListeners();
+    unawaited(_correctMusicClock());
+  }
+
+  Future<void> _correctMusicClock() async {
+    if (_disposed || _correctingMusic || !isPlaying) return;
+    final track = _musicTrack;
+    final path = track?.sourcePath;
+    if (path == null || path.isEmpty || _loadedMusicPath != path) return;
+    Duration actual;
+    try {
+      actual = _music.position;
+    } catch (_) {
+      return;
+    }
+    final expected = musicSeekTarget(position, track!.startOffset);
+    if (!shouldCorrectClock(
+      expected: expected,
+      actual: actual,
+      threshold: kPreviewAudioDriftThreshold,
+    )) {
+      return;
+    }
+    _correctingMusic = true;
+    try {
+      await _music.seek(expected);
+    } catch (_) {
+    } finally {
+      _correctingMusic = false;
+    }
   }
 
   Future<void> _loadChain = Future<void>.value();
@@ -190,6 +221,10 @@ class LocalPreviewPort extends PreviewPort {
       if (_clipIndex < _project.clips.length - 1) {
         await _loadClipAt(_clipIndex + 1, autoplay: playing);
       } else {
+        if (!_loopComposition) {
+          await pause();
+          return;
+        }
         await _loadClipAt(0, autoplay: playing);
         await _seekMusicTo(Duration.zero);
       }
@@ -277,6 +312,10 @@ class LocalPreviewPort extends PreviewPort {
           }
         }());
       } else {
+        if (!_loopComposition) {
+          unawaited(pause());
+          return;
+        }
         // Loop whole composition from start.
         _advancing = true;
         unawaited(() async {
@@ -321,8 +360,9 @@ class LocalPreviewPort extends PreviewPort {
 
   Future<void> _seekMusicTo(Duration global) async {
     try {
-      final offset = _musicTrack?.startOffset ?? Duration.zero;
-      await _music.seek(offset + global);
+      await _music.seek(
+        musicSeekTarget(global, _musicTrack?.startOffset ?? Duration.zero),
+      );
     } catch (_) {}
   }
 
@@ -456,7 +496,9 @@ class LocalPreviewPort extends PreviewPort {
   }
 
   @override
-  Future<void> setLooping(bool looping) async {}
+  Future<void> setLooping(bool looping) async {
+    _loopComposition = looping;
+  }
 
   @override
   Widget buildPreview({Key? key, bool showTextLayers = true}) {

@@ -58,6 +58,7 @@ done
 (cd packages/flutter_reels_composer_core && flutter test)
 (cd packages/flutter_reels_composer_ui && flutter test)
 (cd packages/flutter_reels_composer_export_lgpl && flutter test)
+(cd packages/flutter_reels_composer_local && flutter test)
 (cd example && flutter pub get && flutter analyze && flutter test)
 
 # Optional: Android example APK (CI does this)

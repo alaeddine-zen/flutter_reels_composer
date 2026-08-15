@@ -48,9 +48,16 @@ destination is missing or the length differs.
 only to honor cancel. Paths go through `ffmpegEscapePath` (`\`, `"`, `$`,
 `` ` ``).
 
-## Remaining costs (not fake work)
+## Remaining costs (honest limits)
 
-- First filmstrip for a new clip still runs FFmpeg (sparse JPEGs).
-- Export is offline FFmpeg; it is not a GPU timeline renderer.
-- Duet parent playback is a second `Image`/`Video` path in preview.
-- `just_audio` music sync is best-effort against the video clock.
+- **First** filmstrip for a new source still runs FFmpeg (sparse JPEGs).
+  `prefetchTimelineThumbs` starts that work when the project loads so the
+  timeline often hits cache. Verify: [verification.md](verification.md).
+- Export is offline FFmpeg Kit, not a GPU timeline renderer.
+- Duet parent is a second `VideoPlayer` (camera UI + editor preview widgets).
+  Seeks use `duetSeekFromNotify` / `kDuetParentDriftThreshold`, not every tick.
+- Music uses `just_audio`. Playhead mapping is `musicSeekTarget`. Drift ≥
+  120 ms triggers a seek while playing (`_correctMusicClock`).
+- The music-tool meter is a **start-offset** bar, not decoded PCM.
+
+How to prove each claim: [verification.md](verification.md).

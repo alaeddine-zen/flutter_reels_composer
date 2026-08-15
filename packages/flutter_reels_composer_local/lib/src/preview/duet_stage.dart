@@ -7,6 +7,11 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
 
 /// Frames [child] (user camera / preview) with the parent reel.
+///
+/// Keep this file in sync with
+/// `packages/flutter_reels_composer_ui/lib/src/widgets/duet_stage.dart`
+/// (UI cannot depend on local; local cannot depend on UI). Clock policy lives
+/// in core (`duetSeekFromNotify`, `wrapLoopingClock`, `shouldCorrectClock`).
 class DuetStage extends StatefulWidget {
   const DuetStage({
     super.key,
@@ -32,6 +37,7 @@ class DuetStage extends StatefulWidget {
 class _DuetStageState extends State<DuetStage> {
   VideoPlayerController? _parent;
   bool _ready = false;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -49,29 +55,31 @@ class _DuetStageState extends State<DuetStage> {
     if (oldWidget.playParent != widget.playParent) {
       unawaited(_syncPlay());
     }
-    final prev = oldWidget.seekTo;
-    final next = widget.seekTo;
-    if (prev != next) {
-      final jumped =
-          prev == null ||
-          next == null ||
-          (prev - next).abs() >= const Duration(milliseconds: 80);
-      if (jumped) unawaited(_syncSeek());
+    if (duetSeekFromNotify(previous: oldWidget.seekTo, next: widget.seekTo)) {
+      unawaited(_syncSeek());
     }
   }
 
   Future<void> _load() async {
-    await _parent?.dispose();
+    final generation = ++_loadGeneration;
+    final previous = _parent;
     _parent = null;
     _ready = false;
+    if (previous != null) {
+      unawaited(previous.dispose());
+    }
     final path = widget.parentVideoPath;
     if (path == null || path.isEmpty || !File(path).existsSync()) {
-      if (mounted) setState(() {});
+      if (mounted && generation == _loadGeneration) setState(() {});
       return;
     }
     final c = VideoPlayerController.file(File(path));
     try {
       await c.initialize();
+      if (!mounted || generation != _loadGeneration) {
+        await c.dispose();
+        return;
+      }
       await c.setLooping(true);
       await c.setVolume(0.35);
       _parent = c;
@@ -80,8 +88,12 @@ class _DuetStageState extends State<DuetStage> {
       await _syncPlay();
     } catch (_) {
       await c.dispose();
+      if (generation == _loadGeneration) {
+        _parent = null;
+        _ready = false;
+      }
     }
-    if (mounted) setState(() {});
+    if (mounted && generation == _loadGeneration) setState(() {});
   }
 
   Future<void> _syncPlay() async {
@@ -96,16 +108,17 @@ class _DuetStageState extends State<DuetStage> {
 
   Future<void> _syncSeek({bool force = false}) async {
     final c = _parent;
-    var target = widget.seekTo;
-    if (c == null || !_ready || target == null) return;
-    final dur = c.value.duration;
-    if (dur > Duration.zero && target >= dur) {
-      target = Duration(
-        microseconds: target.inMicroseconds % dur.inMicroseconds,
-      );
+    final raw = widget.seekTo;
+    if (c == null || !_ready || raw == null) return;
+    final target = wrapLoopingClock(raw, c.value.duration);
+    if (!force &&
+        !shouldCorrectClock(
+          expected: target,
+          actual: c.value.position,
+          threshold: kDuetParentDriftThreshold,
+        )) {
+      return;
     }
-    final drift = c.value.position - target;
-    if (!force && drift.abs() < const Duration(milliseconds: 280)) return;
     try {
       await c.seekTo(target);
     } catch (_) {}
@@ -113,6 +126,7 @@ class _DuetStageState extends State<DuetStage> {
 
   @override
   void dispose() {
+    _loadGeneration++;
     _parent?.dispose();
     super.dispose();
   }
@@ -122,12 +136,14 @@ class _DuetStageState extends State<DuetStage> {
     if (!_ready || c == null) {
       return const ColoredBox(color: Color(0xFF111111));
     }
-    return FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(
-        width: c.value.size.width,
-        height: c.value.size.height,
-        child: VideoPlayer(c),
+    return RepaintBoundary(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: c.value.size.width,
+          height: c.value.size.height,
+          child: VideoPlayer(c),
+        ),
       ),
     );
   }
