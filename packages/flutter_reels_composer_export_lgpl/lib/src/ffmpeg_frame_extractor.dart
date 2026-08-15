@@ -8,9 +8,10 @@ import 'package:path_provider/path_provider.dart';
 
 /// Sparse, cached frame extraction backed by the LGPL FFmpeg build.
 class FfmpegLgplFrameExtractor implements FrameExtractorPort {
-  FfmpegLgplFrameExtractor();
+  FfmpegLgplFrameExtractor()
+    : _cached = CachedFrameExtractor(const _FfmpegLgplRawExtractor());
 
-  final Map<String, Future<List<File>>> _inFlight = {};
+  final CachedFrameExtractor _cached;
 
   @override
   Future<List<File>> extract({
@@ -20,21 +21,43 @@ class FfmpegLgplFrameExtractor implements FrameExtractorPort {
     int count = 8,
     int height = 72,
   }) {
-    final key =
-        '$sourcePath|${start.inMilliseconds}|${end?.inMilliseconds}|$count|$height';
-    return _inFlight.putIfAbsent(key, () async {
-      try {
-        return await _extractUnlocked(
-          sourcePath: sourcePath,
-          start: start,
-          end: end,
-          count: count,
-          height: height,
-        );
-      } finally {
-        _inFlight.remove(key);
-      }
-    });
+    return _cached.extract(
+      sourcePath: sourcePath,
+      start: start,
+      end: end,
+      count: count,
+      height: height,
+    );
+  }
+
+  @override
+  Future<File?> extractOne({
+    required String sourcePath,
+    Duration at = Duration.zero,
+    int height = 72,
+  }) {
+    return _cached.extractOne(sourcePath: sourcePath, at: at, height: height);
+  }
+}
+
+class _FfmpegLgplRawExtractor implements FrameExtractorPort {
+  const _FfmpegLgplRawExtractor();
+
+  @override
+  Future<List<File>> extract({
+    required String sourcePath,
+    Duration start = Duration.zero,
+    Duration? end,
+    int count = 8,
+    int height = 72,
+  }) {
+    return _extractUnlocked(
+      sourcePath: sourcePath,
+      start: start,
+      end: end,
+      count: count,
+      height: height,
+    );
   }
 
   @override
@@ -112,8 +135,8 @@ class FfmpegLgplFrameExtractor implements FrameExtractorPort {
       }
       final seconds = (timestamp.inMilliseconds / 1000).clamp(0.0, 86400.0);
       final command =
-          '-y -ss $seconds -i "${_escape(sourcePath)}" -frames:v 1 '
-          '-vf "scale=-2:$height" -q:v 5 "${_escape(frame.path)}"';
+          '-y -ss $seconds -i "${ffmpegEscapePath(sourcePath)}" -frames:v 1 '
+          '-vf "scale=-2:$height" -q:v 5 "${ffmpegEscapePath(frame.path)}"';
       try {
         final session = await FFmpegKit.execute(command);
         final code = await session.getReturnCode();
@@ -126,6 +149,4 @@ class FfmpegLgplFrameExtractor implements FrameExtractorPort {
     }
     return frames;
   }
-
-  String _escape(String value) => value.replaceAll('"', r'\"');
 }

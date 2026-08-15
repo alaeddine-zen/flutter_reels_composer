@@ -18,6 +18,9 @@ ComposerConfig(
 )
 ```
 
+Frame extraction uses `CachedFrameExtractor` (in-memory LRU + one FFmpeg job
+at a time) on top of the on-disk JPEG cache.
+
 Read [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) before distributing.
 LGPL compliance is the host app’s responsibility.
 

@@ -2,6 +2,7 @@
 
 - Production harden: preview/export canvas cover parity, dip-to-black fade,
   export quality ladders, autosave, RTL text, typed export errors.
+- Preview/timeline performance: throttled playhead, cached filmstrips, cheaper autosave.
 
 ## 0.2.0
 

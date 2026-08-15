@@ -26,6 +26,31 @@ class LocalPreviewPort extends PreviewPort {
   String? _loadedMusicPath;
   int _clipIndex = 0;
   bool _advancing = false;
+  RenderGraph? _cachedGraph;
+  ProjectDocument? _graphProject;
+  DateTime? _lastUiNotify;
+  VoidCallback? _throttledVideoListener;
+
+  static const _uiNotifyInterval = Duration(milliseconds: 50);
+
+  RenderGraph get renderGraph {
+    if (_cachedGraph == null || !identical(_graphProject, _project)) {
+      _cachedGraph = RenderGraph.fromProject(_project, registry: _registry);
+      _graphProject = _project;
+    }
+    return _cachedGraph!;
+  }
+
+  void _notifyPreviewUi({bool force = false}) {
+    if (_disposed) return;
+    if (!force && _lastUiNotify != null) {
+      final elapsed = DateTime.now().difference(_lastUiNotify!);
+      if (elapsed < _uiNotifyInterval) return;
+    }
+    _lastUiNotify = DateTime.now();
+    notifyListeners();
+  }
+
   Future<void> _loadChain = Future<void>.value();
   int _loadGeneration = 0;
   Timer? _imageTicker;
@@ -112,11 +137,21 @@ class LocalPreviewPort extends PreviewPort {
     await _loadClipAt(_clipIndex, autoplay: false);
   }
 
+  void _attachVideoUiListener(VideoPlayerController controller) {
+    _throttledVideoListener ??= () => _notifyPreviewUi();
+    controller.addListener(_throttledVideoListener!);
+  }
+
+  void _detachVideoUiListener(VideoPlayerController controller) {
+    final listener = _throttledVideoListener;
+    if (listener != null) controller.removeListener(listener);
+  }
+
   Future<void> _disposeVideoController() async {
     final previous = _controller;
     _controller = null;
     if (previous == null) return;
-    previous.removeListener(notifyListeners);
+    _detachVideoUiListener(previous);
     if (_clipListener != null) previous.removeListener(_clipListener!);
     await previous.dispose();
   }
@@ -125,7 +160,7 @@ class LocalPreviewPort extends PreviewPort {
     _pauseImageClock();
     _imagePlaying = true;
     _imageAnchor = DateTime.now();
-    _imageTicker = Timer.periodic(const Duration(milliseconds: 32), (_) {
+    _imageTicker = Timer.periodic(const Duration(milliseconds: 50), (_) {
       if (_disposed) return;
       final clip = _currentClip;
       if (clip == null || clip.kind != TimelineClipKind.image) return;
@@ -133,9 +168,9 @@ class LocalPreviewPort extends PreviewPort {
         unawaited(_advanceFromEnd(playing: true));
         return;
       }
-      notifyListeners();
+      _notifyPreviewUi();
     });
-    notifyListeners();
+    _notifyPreviewUi(force: true);
   }
 
   void _pauseImageClock() {
@@ -201,10 +236,10 @@ class LocalPreviewPort extends PreviewPort {
       _attachClipListener(next);
       final previous = _controller;
       _controller = next;
-      next.addListener(notifyListeners);
+      _attachVideoUiListener(next);
       next = null;
       if (previous != null) {
-        previous.removeListener(notifyListeners);
+        _detachVideoUiListener(previous);
         if (_clipListener != null) previous.removeListener(_clipListener!);
         await previous.dispose();
       }
@@ -303,12 +338,14 @@ class LocalPreviewPort extends PreviewPort {
     final oldOriginalVol = _originalTrack?.volume;
     final oldTimelinePos = position;
     _project = project;
+    _cachedGraph = null;
+    _graphProject = null;
     if (newPaths != oldPaths) {
       _pauseImageClock();
       final old = _controller;
       _controller = null;
       if (old != null) {
-        old.removeListener(notifyListeners);
+        _detachVideoUiListener(old);
         if (_clipListener != null) old.removeListener(_clipListener!);
         old.dispose();
       }
@@ -352,7 +389,7 @@ class LocalPreviewPort extends PreviewPort {
 
   List<double> _matrixForFilter() {
     if (_compareOriginal) return kIdentityColorMatrix;
-    return ColorGrade.fromProject(_project, registry: _registry).matrix;
+    return renderGraph.colorGrade.matrix;
   }
 
   @override
@@ -439,7 +476,7 @@ class LocalPreviewPort extends PreviewPort {
     final c = _controller;
     _controller = null;
     if (c != null) {
-      c.removeListener(notifyListeners);
+      _detachVideoUiListener(c);
       if (_clipListener != null) {
         c.removeListener(_clipListener!);
       }
@@ -475,10 +512,7 @@ class _LocalPreviewView extends StatelessWidget {
       builder: (context, _) {
         final matrix = controller._matrixForFilter();
         final pos = controller.position;
-        final graph = RenderGraph.fromProject(
-          controller.project,
-          registry: controller._registry,
-        );
+        final graph = controller.renderGraph;
         final fade = graph.fadeOpacityAt(pos);
         final clip = controller._currentClip;
         final vc = controller._controller;
@@ -498,22 +532,26 @@ class _LocalPreviewView extends StatelessWidget {
             errorBuilder: (_, _, _) => const ColoredBox(color: Colors.black),
           );
         } else {
-          video = FittedBox(
-            fit: BoxFit.cover,
-            child: SizedBox(
-              width: vc!.value.size.width,
-              height: vc.value.size.height,
-              child: VideoPlayer(vc),
+          video = RepaintBoundary(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: vc!.value.size.width,
+                height: vc.value.size.height,
+                child: VideoPlayer(vc),
+              ),
             ),
           );
         }
-        video = Opacity(
-          opacity: fade,
-          child: ColorFiltered(
+        if (fade < 0.999) {
+          video = Opacity(opacity: fade, child: video);
+        }
+        if (!controller._compareOriginal && graph.colorGrade.isActive) {
+          video = ColorFiltered(
             colorFilter: ColorFilter.matrix(matrix),
             child: video,
-          ),
-        );
+          );
+        }
         video = DuetStage(
           layout: controller.project.duetLayout,
           parentVideoPath: controller.project.parentVideoPath,

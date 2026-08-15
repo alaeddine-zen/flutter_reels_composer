@@ -6,6 +6,7 @@ Public docs for Flutter Reels Composer. Start at the [root README](../README.md)
 | --- | --- |
 | [Getting started](getting-started.md) | Install, permissions, first `open()` |
 | [Architecture](architecture.md) | Packages, flow, project model |
+| [Performance](performance.md) | Preview, filmstrip, autosave, export |
 | [Extensibility](extensibility.md) | Tools, engines, ports, catalogs |
 | [ComposerConfig](api/composer-config.md) | Host API fields |
 | [Permissions](permissions.md) | Android + iOS (SPM and CocoaPods) |

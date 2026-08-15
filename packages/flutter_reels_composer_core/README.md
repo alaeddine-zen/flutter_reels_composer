@@ -6,6 +6,8 @@ MIT domain layer for Flutter Reels Composer: immutable `ProjectDocument`,
 Use this package to implement a custom `ComposerEngine`, `ExportPort`,
 `FrameExtractorPort`, `DraftStore`, `CaptionEngine`, or `EditorTool`.
 
+Helpers: `CachedFrameExtractor` (LRU + serialized extract), `ffmpegEscapePath`.
+
 No camera, gallery, or FFmpeg Kit dependency.
 
 Host apps should usually depend on

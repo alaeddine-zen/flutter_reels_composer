@@ -37,6 +37,7 @@ The MIT facade fills unspecified ports:
 | `locale` | `Locale?` | inherited | Selects bundled `ComposerL10n` (`en`, `fr`, `ar`) |
 | `l10n` | `ComposerToolL10n?` | `ComposerL10n.resolve(locale)` | Full string override |
 | `draftStore` | `DraftStore?` | `FileDraftStore` | Save / list / restore |
+| `autosaveInterval` | `Duration` | 8 s | Periodic editor draft flush; `Duration.zero` disables (no `draftSaved` analytics) |
 
 Helpers:
 

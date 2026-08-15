@@ -11,6 +11,8 @@
 - `ComposerConfig.autosaveInterval` (default 8s; `Duration.zero` disables).
 - `textLooksRtl` for overlay text direction.
 - `ExportCancelledException` / `MissingClipException` from exporters.
+- `CachedFrameExtractor` (LRU + serialized extract) and `ffmpegEscapePath`.
+- `MemoryDraftStore` keeps an existing `updatedAt` (autosave-friendly).
 
 ## 0.2.0
 

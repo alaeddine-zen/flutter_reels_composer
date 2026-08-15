@@ -25,6 +25,21 @@ class FileDraftStore implements DraftStore {
     return File(p.join(root.path, id, 'project.json'));
   }
 
+  bool _alreadyCopied(File source, File dest) {
+    if (source.path == dest.path) return true;
+    if (!dest.existsSync()) return false;
+    try {
+      return dest.lengthSync() == source.lengthSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _copyIfNeeded(File source, File dest) async {
+    if (_alreadyCopied(source, dest)) return;
+    await source.copy(dest.path);
+  }
+
   @override
   Future<String> save(ProjectDocument project) async {
     final root = await _root();
@@ -33,7 +48,7 @@ class FileDraftStore implements DraftStore {
       await dir.create(recursive: true);
     }
 
-    var doc = project.touch();
+    var doc = project.updatedAt == null ? project.touch() : project;
     final updatedClips = <TimelineClip>[];
     for (var i = 0; i < doc.clips.length; i++) {
       final clip = doc.clips[i];
@@ -45,12 +60,10 @@ class FileDraftStore implements DraftStore {
       final dest = File(
         p.join(dir.path, 'source_$i${p.extension(clip.sourcePath)}'),
       );
-      if (source.path != dest.path) {
-        await source.copy(dest.path);
-        updatedClips.add(clip.copyWith(sourcePath: dest.path));
-      } else {
-        updatedClips.add(clip);
-      }
+      await _copyIfNeeded(source, dest);
+      updatedClips.add(
+        source.path == dest.path ? clip : clip.copyWith(sourcePath: dest.path),
+      );
     }
     doc = doc.copyWith(clips: updatedClips);
 
@@ -60,8 +73,8 @@ class FileDraftStore implements DraftStore {
       final source = File(path);
       if (!source.existsSync()) continue;
       final dest = File(p.join(dir.path, 'music${p.extension(path)}'));
+      await _copyIfNeeded(source, dest);
       if (source.path != dest.path) {
-        await source.copy(dest.path);
         doc = doc.copyWith(
           audioTracks: doc.audioTracks
               .map(

@@ -7,6 +7,9 @@
 - Cover panel: export quality chips 480 / 720 / 1080.
 - Periodic editor autosave; typed `ExportCancelledException` handling.
 - RTL overlay text; gallery photos import as `ImageClip` (no FFmpeg at import).
+- Editor chrome no longer rebuilds on every preview tick; timeline playhead
+  listens to `PreviewPort` only.
+- Clip filmstrips extract 8 stable source frames (trim/zoom crop in-widget).
 
 ## 0.2.0
 

@@ -84,6 +84,9 @@ flushes the draft store without emitting `draftSaved` analytics.
 
 FFmpeg helpers (`atempo` / `setpts` / `canvasCover` / `dipToBlack`) live in
 the export packages. `FfmpegFilters` remaining in core is deprecated.
+`ffmpegEscapePath` is the shared path-escape helper. Frame extractors are
+wrapped with `CachedFrameExtractor` (LRU + serialized FFmpeg). See
+[performance.md](performance.md).
 
 Legacy bake (trim, concat, speed, text PNG, audio mix, duet, cover JPEG)
 still runs; the recipe is the canonical plan.

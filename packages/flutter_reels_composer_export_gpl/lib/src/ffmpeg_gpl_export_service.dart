@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -63,13 +64,13 @@ class FfmpegGplExportPort
       ),
     );
     final command =
-        '-y -loop 1 -t 3 -i "${_escape(image.path)}" '
+        '-y -loop 1 -t 3 -i "${ffmpegEscapePath(image.path)}" '
         '-f lavfi -t 3 -i anullsrc=channel_layout=stereo:sample_rate=44100 '
         '-vf "${FfmpegFilters.canvasCover(width: 1080, height: 1920, fps: 30)}" '
         '-map 0:v:0 -map 1:a:0 '
         '-c:v libx264 -tune stillimage -pix_fmt yuv420p -r 30 '
         '-c:a aac -b:a 128k -shortest -movflags +faststart '
-        '"${_escape(output.path)}"';
+        '"${ffmpegEscapePath(output.path)}"';
     final session = await FFmpegKit.execute(command);
     final code = await session.getReturnCode();
     if (!ReturnCode.isSuccess(code) ||
@@ -263,12 +264,16 @@ class FfmpegGplExportPort
         if (overlayPng case final File overlay) overlay,
         ...timedPngs,
       ];
-      final inputFlags = StringBuffer('-y -i "${_escape(sourcePath)}"');
+      final inputFlags = StringBuffer(
+        '-y -i "${ffmpegEscapePath(sourcePath)}"',
+      );
       for (final f in overlayInputs) {
-        inputFlags.write(' -i "${_escape(f.path)}"');
+        inputFlags.write(' -i "${ffmpegEscapePath(f.path)}"');
       }
       if (hasMusic) {
-        inputFlags.write(' -stream_loop -1 -i "${_escape(music.sourcePath!)}"');
+        inputFlags.write(
+          ' -stream_loop -1 -i "${ffmpegEscapePath(music.sourcePath!)}"',
+        );
       }
 
       final w = project.settings.width;
@@ -326,7 +331,7 @@ class FfmpegGplExportPort
             '-movflags +faststart "$bakePath"';
       } else {
         cmd =
-            '-y -i "${_escape(sourcePath)}" '
+            '-y -i "${ffmpegEscapePath(sourcePath)}" '
             '-vf "${videoFilters.join(',')}" '
             '-af "volume=$originalVol" '
             '${_videoEncodeArgs(project.settings.bitrate)} '
@@ -404,7 +409,7 @@ class FfmpegGplExportPort
 
     final concatOut = File(p.join(workDir.path, 'concat.mp4'));
     final concatCmd =
-        '-y -f concat -safe 0 -i "${_escape(listFile.path)}" '
+        '-y -f concat -safe 0 -i "${ffmpegEscapePath(listFile.path)}" '
         '-c copy -movflags +faststart "${concatOut.path}"';
     await _runFfmpeg(concatCmd, cancelToken);
     return concatOut.path;
@@ -531,7 +536,7 @@ class FfmpegGplExportPort
 
     if (isImage) {
       final still =
-          '-y -loop 1 -t $outDur -i "${_escape(inputPath)}" '
+          '-y -loop 1 -t $outDur -i "${ffmpegEscapePath(inputPath)}" '
           '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '
           '$vf'
           '-map 0:v:0 -map 1:a:0 '
@@ -545,7 +550,7 @@ class FfmpegGplExportPort
     final atempo = FfmpegFilters.atempoChain(speed);
     final af = atempo.isEmpty ? '' : '-af "$atempo" ';
     final withAudio =
-        '-y -ss $startSec -t $durationSec -i "${_escape(inputPath)}" '
+        '-y -ss $startSec -t $durationSec -i "${ffmpegEscapePath(inputPath)}" '
         '$vf$af'
         '$encode '
         '-c:a aac -ar 44100 -ac 2 -b:a 128k '
@@ -557,7 +562,7 @@ class FfmpegGplExportPort
       // Video-only sources (legacy photo clips, muted imports).
     }
     final silent =
-        '-y -ss $startSec -t $durationSec -i "${_escape(inputPath)}" '
+        '-y -ss $startSec -t $durationSec -i "${ffmpegEscapePath(inputPath)}" '
         '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '
         '$vf'
         '-map 0:v:0 -map 1:a:0 '
@@ -597,7 +602,7 @@ class FfmpegGplExportPort
     }
     final durSec = durationSec.clamp(0.05, 600.0);
     final cmd =
-        '-y -i "${_escape(parentPath)}" -i "${_escape(userPath)}" '
+        '-y -i "${ffmpegEscapePath(parentPath)}" -i "${ffmpegEscapePath(userPath)}" '
         '-filter_complex '
         '"$vchain;'
         '[0:a]volume=0.4[a0];[1:a]volume=1.0[a1];'
@@ -610,7 +615,7 @@ class FfmpegGplExportPort
       await _runFfmpeg(cmd, cancelToken);
     } catch (_) {
       final silent =
-          '-y -i "${_escape(parentPath)}" -i "${_escape(userPath)}" '
+          '-y -i "${ffmpegEscapePath(parentPath)}" -i "${ffmpegEscapePath(userPath)}" '
           '-filter_complex "$vchain" '
           '-map "[v]" -map 1:a? -t $durSec '
           '${_videoEncodeArgs(bitrate)} '
@@ -622,21 +627,29 @@ class FfmpegGplExportPort
 
   Future<void> _runFfmpeg(String command, CancelToken cancelToken) async {
     if (cancelToken.isCancelled) throw const ExportCancelledException();
-    final session = await FFmpegKit.executeAsync(command, null);
-    // Poll until done so cancel can interrupt.
-    while (!cancelToken.isCancelled) {
-      final code = await session.getReturnCode();
-      if (code != null) {
-        if (!ReturnCode.isSuccess(code)) {
-          final logs = await session.getAllLogsAsString();
-          throw StateError('FFmpeg export failed: ${logs ?? code}');
-        }
-        return;
+    final finished = Completer<void>();
+    final session = await FFmpegKit.executeAsync(command, (_) {
+      if (!finished.isCompleted) finished.complete();
+    });
+    while (!finished.isCompleted) {
+      if (cancelToken.isCancelled) {
+        await FFmpegKit.cancel();
+        throw const ExportCancelledException();
       }
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await Future.any([
+        finished.future,
+        Future<void>.delayed(const Duration(milliseconds: 200)),
+      ]);
     }
-    await FFmpegKit.cancel();
-    throw const ExportCancelledException();
+    if (cancelToken.isCancelled) {
+      await FFmpegKit.cancel();
+      throw const ExportCancelledException();
+    }
+    final code = await session.getReturnCode();
+    if (!ReturnCode.isSuccess(code)) {
+      final logs = await session.getAllLogsAsString();
+      throw StateError('FFmpeg export failed: ${logs ?? code}');
+    }
   }
 
   Future<File?> _writeCover(
@@ -654,8 +667,8 @@ class FfmpegGplExportPort
       final offsetSec = project.cover.timeOffset.inMilliseconds / 1000.0;
       final dest = File(p.join(outDir.path, 'cover.jpg'));
       final cmd =
-          '-y -ss $offsetSec -i "${_escape(video.path)}" -frames:v 1 -q:v 2 '
-          '"${dest.path}"';
+          '-y -ss $offsetSec -i "${ffmpegEscapePath(video.path)}" -frames:v 1 -q:v 2 '
+          '"${ffmpegEscapePath(dest.path)}"';
       await _runFfmpeg(cmd, CancelToken());
       if (dest.existsSync()) return dest;
     } catch (error) {
@@ -663,6 +676,4 @@ class FfmpegGplExportPort
     }
     return null;
   }
-
-  String _escape(String path) => path.replaceAll('"', r'\"');
 }

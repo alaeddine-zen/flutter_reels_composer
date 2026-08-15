@@ -97,16 +97,17 @@ Try the bundled host: [`example/`](example/).
 | Area | What ships in 0.2.0 |
 | --- | --- |
 | Capture | Camera recording (front/back), countdown, record presets 15 / 30 / 60 s |
-| Import | Gallery videos and photos (`photo_manager`); photos become 3 s clips |
-| Timeline | Multi-clip, trim, speed, cover frame |
-| Look | Color filters (bundled + host `EffectCatalog`) |
-| Overlays | Draggable / rotatable text layers |
+| Import | Gallery videos and photos (`photo_manager`); photos become `ImageClip` stills (3 s, no FFmpeg at import) |
+| Timeline | Multi-clip, trim / roll handles, split, snap, zoom, dip-to-black fade |
+| History | Undo / redo (`ComposerController.apply` / `applyLive`, Ctrl/Cmd+Z) |
+| Look | Color filters (bundled + host `EffectCatalog`); preview = export `ColorGrade` |
+| Overlays | Draggable / rotatable text layers; RTL via `textLooksRtl` |
 | Audio | Music catalog + device audio; original + music mix |
 | Captions | Pluggable `CaptionEngine` (default is a no-op) |
 | Templates | Bundled JSON catalog, overridable |
 | Duet | Split or picture-in-picture when `parentVideoPath` + `duetLayout` are set |
-| Drafts | `FileDraftStore` under the app support directory |
-| Export | LGPL FFmpeg: **mpeg4** default, optional `h264_videotoolbox` / `h264_mediacodec` |
+| Drafts | `FileDraftStore`; editor autosave every 8 s (`autosaveInterval`) |
+| Export | LGPL FFmpeg: **mpeg4** default, optional hardware H.264; quality chips 480 / 720 / 1080; canvas **cover** matches preview |
 | Extensibility | `EditorTool`, `ComposerEngine`, `ExportPort`, catalogs, theme, l10n |
 
 Built-in editor tool ids: `trim`, `filter`, `text`, `audio`, `cover`, `speed`,
@@ -331,6 +332,7 @@ FlutterReelsComposer.open(
 | `captionEngine` | `NullCaptionEngine` | Without a real engine, Generate returns no cues |
 | `exporter` | `FfmpegLgplExportPort()` | Inject any `ExportPort` |
 | `draftStore` | `FileDraftStore()` | Or `MemoryDraftStore` / custom |
+| `autosaveInterval` | 8 s | `Duration.zero` disables periodic draft flush |
 | `enabledFeatures` | `kDefaultV1Features` | Intersected with engine capabilities |
 
 Host `extraTools` stay visible even when the local engine does not advertise
@@ -389,6 +391,7 @@ not on the MIT/GPL façades or the main UI barrel.
 
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
+- [Performance](docs/performance.md)
 - [Extensibility](docs/extensibility.md)
 - [ComposerConfig API](docs/api/composer-config.md)
 - [Permissions](docs/permissions.md)

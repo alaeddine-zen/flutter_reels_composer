@@ -1,6 +1,7 @@
 ## Unreleased
 
 - Same production harden as the MIT facade (canvas cover, fade, typed errors).
+- Same preview/timeline performance work as the MIT facade.
 
 ## 0.2.0
 

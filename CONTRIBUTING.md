@@ -57,6 +57,7 @@ done
 # Tests that CI runs
 (cd packages/flutter_reels_composer_core && flutter test)
 (cd packages/flutter_reels_composer_ui && flutter test)
+(cd packages/flutter_reels_composer_export_lgpl && flutter test)
 (cd example && flutter pub get && flutter analyze && flutter test)
 
 # Optional: Android example APK (CI does this)
@@ -64,6 +65,8 @@ done
 ```
 
 Format Dart you touch (`dart format packages example/lib`). Do not skip hooks.
+If `flutter pub get` rewrites `analysis_options.yaml` (“Upgrading
+analysis_options.yaml…”), **revert those files** before you commit.
 
 ## Package boundaries
 

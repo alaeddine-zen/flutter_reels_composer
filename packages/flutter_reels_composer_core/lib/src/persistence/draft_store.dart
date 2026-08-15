@@ -12,7 +12,7 @@ class MemoryDraftStore implements DraftStore {
 
   @override
   Future<String> save(ProjectDocument project) async {
-    final doc = project.touch();
+    final doc = project.updatedAt == null ? project.touch() : project;
     _docs[doc.id] = doc;
     return doc.id;
   }

@@ -520,7 +520,6 @@ class _ClipCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final count = (width / 28).round().clamp(2, 16);
     return SizedBox(
       width: width,
       height: 56,
@@ -537,15 +536,10 @@ class _ClipCell extends StatelessWidget {
                     width: selected ? 2 : 1,
                   ),
                 ),
-                child: Filmstrip(
-                  sourcePath: clip.sourcePath,
+                child: _ClipFilmstrip(
+                  clip: clip,
                   frameExtractor: frameExtractor,
-                  start: clip.trimStart,
-                  end: clip.trimEnd,
-                  height: 56,
-                  count: count,
                   accent: theme.accent,
-                  stillImage: clip.kind == TimelineClipKind.image,
                 ),
               ),
             ),
@@ -573,6 +567,65 @@ class _ClipCell extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Stable 8-frame strip of the **source** (not the trim window) so zoom/trim
+/// does not spawn new FFmpeg jobs. The visible window is cropped to the trim.
+class _ClipFilmstrip extends StatelessWidget {
+  const _ClipFilmstrip({
+    required this.clip,
+    required this.frameExtractor,
+    required this.accent,
+  });
+
+  final TimelineClip clip;
+  final FrameExtractorPort frameExtractor;
+  final Color accent;
+
+  static const _thumbCount = 8;
+  static const _height = 56.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final strip = Filmstrip(
+      sourcePath: clip.sourcePath,
+      frameExtractor: frameExtractor,
+      start: Duration.zero,
+      end: clip.sourceDuration,
+      height: _height,
+      count: _thumbCount,
+      accent: accent,
+      stillImage: clip.kind == TimelineClipKind.image,
+    );
+    if (clip.kind == TimelineClipKind.image) return strip;
+
+    final totalMs = clip.sourceDuration.inMilliseconds.clamp(1, 86400000);
+    final startF = (clip.trimStart.inMilliseconds / totalMs).clamp(0.0, 1.0);
+    final endF = (clip.trimEnd.inMilliseconds / totalMs).clamp(startF, 1.0);
+    final visible = (endF - startF).clamp(0.02, 1.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fullW = constraints.maxWidth / visible;
+        return ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.centerLeft,
+            minWidth: fullW,
+            maxWidth: fullW,
+            minHeight: constraints.maxHeight,
+            maxHeight: constraints.maxHeight,
+            child: Transform.translate(
+              offset: Offset(-startF * fullW, 0),
+              child: SizedBox(
+                width: fullW,
+                height: constraints.maxHeight,
+                child: strip,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

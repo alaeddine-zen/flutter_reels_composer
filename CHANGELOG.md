@@ -22,6 +22,10 @@ is unchanged.
 - Presets export 480 / 720 / 1080, autosave éditeur, texte RTL
 - Photos galerie → `ImageClip` (sans encode FFmpeg à l’import)
 - Erreurs d’export typées ; `file_picker` < 11 pour le CI Android
+- Preview: chrome éditeur découplé du playhead (~50 ms), `RenderGraph` mis en cache
+- Filmstrips: 8 frames source stables + `CachedFrameExtractor` (LRU, FFmpeg sérialisé)
+- Autosave: skip si `updatedAt` inchangé ; `FileDraftStore` ne recopie pas les médias identiques
+- Export: `executeAsync` complete callback ; `ffmpegEscapePath` (`\`, `"`, `$`, `` ` ``)
 
 ## 0.2.0
 

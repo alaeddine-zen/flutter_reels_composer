@@ -49,8 +49,8 @@ class _EditorPageState extends State<EditorPage> {
   late final EditorToolRegistry _registry;
   late final ComposerToolL10n _l10n;
   Timer? _autosaveTimer;
-
-  bool get _previewReady => _preview != null;
+  DateTime? _autosavedUpdatedAt;
+  bool _autosavedWhileUnstamped = false;
 
   @override
   void initState() {
@@ -79,8 +79,17 @@ class _EditorPageState extends State<EditorPage> {
 
   Future<void> _autosaveDraft() async {
     if (!mounted || _exporting) return;
+    final project = widget.engine.project;
+    final stamp = project.updatedAt;
+    if (stamp != null) {
+      if (stamp == _autosavedUpdatedAt) return;
+    } else if (_autosavedWhileUnstamped) {
+      return;
+    }
     try {
-      await _drafts.save(widget.engine.project);
+      await _drafts.save(project);
+      _autosavedUpdatedAt = stamp;
+      _autosavedWhileUnstamped = stamp == null;
     } catch (error) {
       debugPrint('EditorPage: autosave failed: $error');
     }
@@ -400,7 +409,6 @@ class _EditorPageState extends State<EditorPage> {
               listenable: Listenable.merge([
                 widget.engine.projectListenable,
                 _controller,
-                if (_previewReady) _preview!,
               ]),
               builder: (context, _) {
                 final preview = _preview;
@@ -419,26 +427,40 @@ class _EditorPageState extends State<EditorPage> {
                             children: [
                               GestureDetector(
                                 onTap: _onPreviewTap,
-                                child: preview.buildPreview(
-                                  showTextLayers: false,
-                                ),
-                              ),
-                              if (!preview.isPlaying)
-                                const IgnorePointer(
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.play_arrow_rounded,
-                                      color: Colors.white54,
-                                      size: 72,
-                                    ),
+                                child: RepaintBoundary(
+                                  child: preview.buildPreview(
+                                    showTextLayers: false,
                                   ),
                                 ),
-                              EditableTextLayers(
-                                controller: _controller,
-                                project: project,
-                                selectedId: _selectedTextId,
-                                onSelected: _onTextSelected,
-                                position: preview.position,
+                              ),
+                              ListenableBuilder(
+                                listenable: preview,
+                                builder: (context, _) {
+                                  if (preview.isPlaying) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return const IgnorePointer(
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.play_arrow_rounded,
+                                        color: Colors.white54,
+                                        size: 72,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              ListenableBuilder(
+                                listenable: preview,
+                                builder: (context, _) {
+                                  return EditableTextLayers(
+                                    controller: _controller,
+                                    project: project,
+                                    selectedId: _selectedTextId,
+                                    onSelected: _onTextSelected,
+                                    position: preview.position,
+                                  );
+                                },
                               ),
                               SafeArea(
                                 child: Stack(
@@ -581,43 +603,49 @@ class _EditorPageState extends State<EditorPage> {
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (project.clips.isNotEmpty)
-                                                ClipTimeline(
-                                                  theme: theme,
-                                                  project: project,
-                                                  position: preview.position,
-                                                  frameExtractor: widget
-                                                      .config
-                                                      .frameExtractor,
-                                                  controller: _controller,
-                                                  maxDuration:
-                                                      widget.config.maxDuration,
-                                                  canSplit: _gate.allows(
-                                                    ComposerFeature.multiClip,
-                                                  ),
-                                                  canDelete: _gate.allows(
-                                                    ComposerFeature.multiClip,
-                                                  ),
-                                                  l10n: _l10n,
-                                                  onSeek: (d) {
-                                                    preview.pause();
-                                                    preview.seek(d);
-                                                  },
-                                                  onSplit: () {
-                                                    widget.config.onEvent?.call(
-                                                      const ComposerAnalyticsEvent(
-                                                        ComposerAnalyticsEventType
-                                                            .clipSplit,
-                                                      ),
+                                              ListenableBuilder(
+                                                listenable: preview,
+                                                builder: (context, _) {
+                                                  if (project.clips.isEmpty) {
+                                                    return PreviewScrubber(
+                                                      theme: theme,
+                                                      preview: preview,
+                                                      bottomInset: 8,
                                                     );
-                                                  },
-                                                )
-                                              else
-                                                PreviewScrubber(
-                                                  theme: theme,
-                                                  preview: preview,
-                                                  bottomInset: 8,
-                                                ),
+                                                  }
+                                                  return ClipTimeline(
+                                                    theme: theme,
+                                                    project: project,
+                                                    position: preview.position,
+                                                    frameExtractor: widget
+                                                        .config
+                                                        .frameExtractor,
+                                                    controller: _controller,
+                                                    maxDuration: widget
+                                                        .config
+                                                        .maxDuration,
+                                                    canSplit: _gate.allows(
+                                                      ComposerFeature.multiClip,
+                                                    ),
+                                                    canDelete: _gate.allows(
+                                                      ComposerFeature.multiClip,
+                                                    ),
+                                                    l10n: _l10n,
+                                                    onSeek: (d) {
+                                                      preview.pause();
+                                                      preview.seek(d);
+                                                    },
+                                                    onSplit: () {
+                                                      widget.config.onEvent?.call(
+                                                        const ComposerAnalyticsEvent(
+                                                          ComposerAnalyticsEventType
+                                                              .clipSplit,
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
                                             ],
                                           ),
                                         ),

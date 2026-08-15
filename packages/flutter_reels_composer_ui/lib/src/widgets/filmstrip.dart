@@ -40,6 +40,7 @@ class Filmstrip extends StatefulWidget {
 class _FilmstripState extends State<Filmstrip> {
   List<File> _frames = const [];
   bool _loading = true;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -61,8 +62,9 @@ class _FilmstripState extends State<Filmstrip> {
   }
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
     if (widget.stillImage) {
-      if (mounted) {
+      if (mounted && generation == _loadGeneration) {
         setState(() {
           _frames = const [];
           _loading = false;
@@ -78,7 +80,7 @@ class _FilmstripState extends State<Filmstrip> {
       count: widget.count,
       height: widget.height.round(),
     );
-    if (!mounted) return;
+    if (!mounted || generation != _loadGeneration) return;
     setState(() {
       _frames = frames;
       _loading = false;
@@ -107,19 +109,16 @@ class _FilmstripState extends State<Filmstrip> {
                 ),
               )
             else if (widget.stillImage)
-              Row(
-                children: List.generate(
-                  widget.count,
-                  (_) => Expanded(
-                    child: Image.file(
-                      File(widget.sourcePath),
-                      fit: BoxFit.cover,
-                      height: widget.height,
-                      errorBuilder: (_, _, _) =>
-                          const ColoredBox(color: Colors.white12),
-                    ),
-                  ),
-                ),
+              Image.file(
+                File(widget.sourcePath),
+                fit: BoxFit.cover,
+                height: widget.height,
+                width: double.infinity,
+                cacheHeight: (widget.height * 2).round(),
+                filterQuality: FilterQuality.low,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) =>
+                    const ColoredBox(color: Colors.white12),
               )
             else if (_frames.isEmpty)
               ColoredBox(
@@ -147,6 +146,9 @@ class _FilmstripState extends State<Filmstrip> {
                         f,
                         fit: BoxFit.cover,
                         height: widget.height,
+                        cacheHeight: (widget.height * 2).round(),
+                        filterQuality: FilterQuality.low,
+                        gaplessPlayback: true,
                         errorBuilder: (_, _, _) =>
                             const ColoredBox(color: Colors.white12),
                       ),
