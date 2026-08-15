@@ -47,14 +47,25 @@ frame.
 
 ## Project model
 
-`ProjectDocument` is immutable. Edits go through `ComposerEngine.applyMutation`
-with a `ProjectMutation` (`SetClipsMutation`, `AddTextLayerMutation`,
-`SetMusicTrackMutation`, `UpdateClipSpeedMutation`, `ApplyTemplateMutation`,
-`SetDuetLayoutMutation`, …).
+`ProjectDocument` is immutable (JSON schema **v3**). Edits go through
+`ComposerEngine.applyMutation` with a `ProjectMutation`.
 
-Export reads the document: trim, concat, speed (`setpts` / `atempo`), color
-`eq` filters, PNG text overlays, audio mix, optional duet `vstack` / PIP
-overlay, cover JPEG.
+`Timeline.fromDocument` and `RenderGraph.fromProject` are **derived views** —
+not a second store. Preview and FFmpeg export consume the same graph.
+
+Color is a 4×5 `ColorFilter` matrix (`ColorGrade`), applied as
+`ColorFilter.matrix` in preview and `colorchannelmixer` (+ `lutrgb` offsets)
+in FFmpeg. This is **not** `.cube` LUT support.
+
+Export builds an `ExportRecipe` and checks `ExportCapabilitySet` before
+baking. Unsupported operations throw `UnsupportedExportException` instead of
+being dropped.
+
+FFmpeg helpers (`atempo` / `setpts`) live in the export packages.
+`FfmpegFilters` remaining in core is deprecated.
+
+Legacy bake (trim, concat, speed, text PNG, audio mix, duet, cover JPEG)
+still runs; the recipe is the canonical plan.
 
 ## Ports (core)
 

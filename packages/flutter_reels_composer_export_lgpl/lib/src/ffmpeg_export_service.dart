@@ -9,7 +9,11 @@ import 'package:flutter/painting.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
+import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart'
+    hide FfmpegFilters;
+
+import 'ffmpeg_color_matrix.dart';
+import 'ffmpeg_filters.dart';
 
 /// Bakes ProjectDocument edits into a final MP4 via FFmpeg (export-only).
 enum FfmpegLgplVideoCodec {
@@ -33,6 +37,8 @@ class FfmpegLgplExportPort
   EffectRegistry? _registry;
   final FfmpegLgplVideoCodec videoCodec;
 
+  ExportCapabilitySet get capabilities => ExportCapabilitySet.ffmpegV1;
+
   String _videoEncodeArgs() {
     if (videoCodec == FfmpegLgplVideoCodec.hardwareH264) {
       if (Platform.isIOS || Platform.isMacOS) {
@@ -54,14 +60,14 @@ class FfmpegLgplExportPort
   }
 
   /// Pure helper for tests: multi-clip projects need a concat pass.
-  static bool needsConcat(ProjectDocument project) => project.clips.length > 1;
+  static bool needsConcat(ProjectDocument project) =>
+      ExportRecipe.fromProject(project).needsConcat;
 
-  static bool needsSpeed(ProjectDocument project) => project.hasSpeedChange;
+  static bool needsSpeed(ProjectDocument project) =>
+      ExportRecipe.fromProject(project).needsSpeed;
 
   static bool needsDuet(ProjectDocument project) =>
-      project.duetLayout.isActive &&
-      project.parentVideoPath != null &&
-      project.parentVideoPath!.isNotEmpty;
+      ExportRecipe.fromProject(project).needsDuet;
 
   /// Converts a still image into a three-second clip consumable by the editor.
   @override
@@ -116,6 +122,14 @@ class FfmpegLgplExportPort
         throw StateError('Export cancelled');
       }
 
+      final recipe = ExportRecipe.fromProject(project, registry: _registry);
+      final unsupported = capabilities.unsupportedOperations(
+        recipe.requiredOperations,
+      );
+      if (unsupported.isNotEmpty) {
+        throw UnsupportedExportException(unsupported);
+      }
+
       final outDir =
           options.outputDirectory ??
           Directory(
@@ -151,6 +165,7 @@ class FfmpegLgplExportPort
       final videoOut = File(p.join(outDir.path, 'reel.mp4'));
       await _bake(
         project: project,
+        recipe: recipe,
         outputPath: videoOut.path,
         workDir: outDir,
         cancelToken: cancelToken,
@@ -181,6 +196,7 @@ class FfmpegLgplExportPort
 
   Future<void> _bake({
     required ProjectDocument project,
+    required ExportRecipe recipe,
     required String outputPath,
     required Directory workDir,
     required CancelToken cancelToken,
@@ -188,35 +204,25 @@ class FfmpegLgplExportPort
   }) async {
     final sourcePath = await _resolveSourceVideo(
       project: project,
+      recipe: recipe,
       workDir: workDir,
       cancelToken: cancelToken,
     );
-    final durationSec = (project.duration.inMilliseconds / 1000.0).clamp(
+    final durationSec = (recipe.duration.inMilliseconds / 1000.0).clamp(
       0.05,
       600.0,
     );
 
-    final needsFilter =
-        (project.activeFilterId ?? 'normal') != 'normal' &&
-        project.activeFilterIntensity > 0.05;
-    final textLayers = project.layers
-        .where((l) => l.type == VisualLayerType.text)
-        .toList();
+    final needsFilter = recipe.needsColor;
+    final textLayers = recipe.textOverlays;
     final untimedLayers = textLayers.where((l) => !l.isTimed).toList();
     final timedLayers = textLayers.where((l) => l.isTimed).toList();
-    AudioTrack? music;
-    AudioTrack? original;
-    for (final t in project.audioTracks) {
-      if (t.kind == AudioTrackKind.music && t.sourcePath != null) {
-        music ??= t;
-      } else if (t.kind == AudioTrackKind.original) {
-        original ??= t;
-      }
-    }
+    final music = recipe.music;
+    final original = recipe.originalAudio;
 
     final hasMusic =
         music?.sourcePath != null && File(music!.sourcePath!).existsSync();
-    final duet = needsDuet(project);
+    final duet = recipe.needsDuet;
     final bakePath = duet ? p.join(workDir.path, 'user_baked.mp4') : outputPath;
     final needsReencode = needsFilter || textLayers.isNotEmpty || hasMusic;
 
@@ -229,12 +235,9 @@ class FfmpegLgplExportPort
       );
     } else {
       final vf = <String>[];
-      if (needsFilter && project.activeFilterIntensity > 0.05) {
-        final eq = _eqForFilter(
-          project.activeFilterId!,
-          project.activeFilterIntensity,
-        );
-        if (eq != null) vf.add(eq);
+      if (needsFilter) {
+        final filter = ColorMatrixFfmpeg.toFilter(recipe.colorGrade.matrix);
+        if (filter != null) vf.add(filter);
       }
 
       File? overlayPng;
@@ -372,33 +375,35 @@ class FfmpegLgplExportPort
   /// Single clip: trim + ensure AAC. Multi: normalize + concat.
   Future<String> _resolveSourceVideo({
     required ProjectDocument project,
+    required ExportRecipe recipe,
     required Directory workDir,
     required CancelToken cancelToken,
   }) async {
-    if (project.clips.length == 1) {
-      final clip = project.clips.first;
-      final startSec = clip.trimStart.inMilliseconds / 1000.0;
-      final durationSec = (clip.sourceSpan.inMilliseconds / 1000.0).clamp(
+    if (recipe.segments.length == 1) {
+      final segment = recipe.segments.first;
+      final startSec = segment.trimStart.inMilliseconds / 1000.0;
+      final durationSec = (segment.sourceSpan.inMilliseconds / 1000.0).clamp(
         0.05,
         600.0,
       );
       final trimmed = File(p.join(workDir.path, 'clip0.mp4'));
       await _encodeSegment(
-        inputPath: clip.sourcePath,
+        inputPath: segment.sourcePath,
         outputPath: trimmed.path,
         startSec: startSec,
         durationSec: durationSec,
-        speed: clip.speed,
+        speed: segment.speed,
+        isImage: segment.isImage,
         cancelToken: cancelToken,
       );
       return trimmed.path;
     }
 
     final segmentPaths = <String>[];
-    for (var i = 0; i < project.clips.length; i++) {
-      final clip = project.clips[i];
-      final startSec = clip.trimStart.inMilliseconds / 1000.0;
-      final durationSec = (clip.sourceSpan.inMilliseconds / 1000.0).clamp(
+    for (var i = 0; i < recipe.segments.length; i++) {
+      final segment = recipe.segments[i];
+      final startSec = segment.trimStart.inMilliseconds / 1000.0;
+      final durationSec = (segment.sourceSpan.inMilliseconds / 1000.0).clamp(
         0.05,
         600.0,
       );
@@ -406,11 +411,12 @@ class FfmpegLgplExportPort
       final w = project.settings.width;
       final h = project.settings.height;
       await _encodeSegment(
-        inputPath: clip.sourcePath,
+        inputPath: segment.sourcePath,
         outputPath: out.path,
         startSec: startSec,
         durationSec: durationSec,
-        speed: clip.speed,
+        speed: segment.speed,
+        isImage: segment.isImage,
         videoFilter:
             'scale=$w:$h:force_original_aspect_ratio=decrease,'
             'pad=$w:$h:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p',
@@ -518,36 +524,6 @@ class FfmpegLgplExportPort
     await output.writeAsBytes(bytes.buffer.asUint8List());
   }
 
-  String? _eqForFilter(String filterId, [double intensity = 1.0]) {
-    final t = intensity.clamp(0.0, 1.0);
-    switch (filterId) {
-      case 'warm':
-        return 'eq=brightness=${0.03 * t}:saturation=${1 + 0.15 * t},hue=h=${10 * t}';
-      case 'cool':
-        return 'eq=brightness=${0.02 * t}:saturation=${1 + 0.1 * t},hue=h=${-12 * t}';
-      case 'cinema':
-        return 'eq=contrast=${1 + 0.1 * t}:saturation=${1 - 0.1 * t}:brightness=${-0.02 * t}';
-      case 'vivid':
-        return 'eq=contrast=${1 + 0.2 * t}:saturation=${1 + 0.35 * t}';
-      case 'mono':
-        return 'hue=s=${1 - t}';
-      case 'soft':
-        return 'eq=brightness=${0.05 * t}:contrast=${1 - 0.05 * t}:saturation=${1 + 0.05 * t}';
-      case 'night':
-        return 'eq=brightness=${-0.08 * t}:contrast=${1 + 0.15 * t}:saturation=${1 - 0.15 * t},hue=h=${-20 * t}';
-      case 'sunset':
-        return 'eq=brightness=${0.04 * t}:saturation=${1 + 0.2 * t},hue=h=${18 * t}';
-      case 'fade':
-        return 'eq=contrast=${1 - 0.1 * t}:brightness=${0.06 * t}:saturation=${1 - 0.15 * t}';
-      default:
-        final desc = _registry?[filterId];
-        if (desc is LutColorEffectDescriptor) {
-          return 'eq=saturation=${1 + 0.05 * t}';
-        }
-        return null;
-    }
-  }
-
   /// Encode a trimmed segment with AAC. Falls back to anullsrc if source has no audio.
   Future<void> _encodeSegment({
     required String inputPath,
@@ -556,6 +532,7 @@ class FfmpegLgplExportPort
     required double durationSec,
     String? videoFilter,
     double speed = 1.0,
+    bool isImage = false,
     required CancelToken cancelToken,
   }) async {
     final speedVf = FfmpegFilters.setpts(speed);
@@ -564,6 +541,21 @@ class FfmpegLgplExportPort
       vfBody = vfBody.isEmpty ? speedVf : '$vfBody,$speedVf';
     }
     final vf = vfBody.isEmpty ? '' : '-vf "$vfBody" ';
+    final outDur = (durationSec / speed.clamp(0.3, 3.0)).clamp(0.05, 600.0);
+
+    if (isImage) {
+      final still =
+          '-y -loop 1 -t $outDur -i "${_escape(inputPath)}" '
+          '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '
+          '$vf'
+          '-map 0:v:0 -map 1:a:0 '
+          '${_videoEncodeArgs()} -r 30 '
+          '-c:a aac -ar 44100 -ac 2 -b:a 128k -shortest '
+          '-movflags +faststart "$outputPath"';
+      await _runFfmpeg(still, cancelToken);
+      return;
+    }
+
     final atempo = FfmpegFilters.atempoChain(speed);
     final af = atempo.isEmpty ? '' : '-af "$atempo" ';
     final withAudio =
@@ -578,7 +570,6 @@ class FfmpegLgplExportPort
     } catch (_) {
       // Video-only sources (legacy photo clips, muted imports).
     }
-    final outDur = (durationSec / speed.clamp(0.3, 3.0)).clamp(0.05, 600.0);
     final silent =
         '-y -ss $startSec -t $durationSec -i "${_escape(inputPath)}" '
         '-f lavfi -t $outDur -i anullsrc=channel_layout=stereo:sample_rate=44100 '

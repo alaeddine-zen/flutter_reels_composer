@@ -19,6 +19,8 @@ abstract class EffectDescriptor {
 }
 
 class LutColorEffectDescriptor implements EffectDescriptor {
+  /// 4×5 color matrix used by preview (`ColorFilter.matrix`) and export
+  /// (`colorchannelmixer`). This is **not** a `.cube` LUT file.
   LutColorEffectDescriptor({
     required this.id,
     required this.name,

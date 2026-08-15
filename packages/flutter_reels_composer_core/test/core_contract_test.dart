@@ -57,7 +57,7 @@ void main() {
       expect(project.activeFilterIntensity, closeTo(0.4, 0.001));
     });
 
-    test('schema v1 json migrates to v2', () {
+    test('schema v1 json migrates to current', () {
       final json = ProjectDocument.fromClip(
         clip: const TimelineClip(
           id: 'c1',
@@ -68,6 +68,7 @@ void main() {
       json.remove('schemaVersion');
       final restored = ProjectDocument.fromJson(json);
       expect(restored.schemaVersion, kProjectSchemaVersion);
+      expect(restored.timeline.mediaClips, hasLength(1));
     });
   });
 

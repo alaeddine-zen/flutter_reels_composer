@@ -23,6 +23,9 @@ jobs:
       - name: Test core contracts
         working-directory: packages/flutter_reels_composer_core
         run: flutter test
+      - name: Test LGPL color matrix compiler
+        working-directory: packages/flutter_reels_composer_export_lgpl
+        run: flutter test
       - name: Test UI registry
         working-directory: packages/flutter_reels_composer_ui
         run: flutter test
