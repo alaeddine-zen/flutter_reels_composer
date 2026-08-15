@@ -1,7 +1,7 @@
 /// UI kit for Flutter Reels Composer.
 ///
 /// Public surface: [ComposerNavigator], [defaultEditorTools], l10n, and
-/// reusable chrome ([ToolRail], [RecordButton], [Filmstrip], [ClipTimeline]).
+/// reusable chrome ([ToolRail], [RecordButton], [ComposerNextButton], [Filmstrip], [ClipTimeline]).
 /// Camera/gallery/editor pages live in `package:flutter_reels_composer_ui/pages.dart`.
 library;
 
@@ -11,5 +11,6 @@ export 'src/editor/default_tools.dart';
 export 'src/l10n/composer_l10n.dart';
 export 'src/widgets/tool_rail.dart';
 export 'src/widgets/record_button.dart';
+export 'src/widgets/composer_next_button.dart';
 export 'src/widgets/filmstrip.dart';
 export 'src/widgets/clip_timeline.dart';

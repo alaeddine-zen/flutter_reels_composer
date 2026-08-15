@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
+import '../../l10n/composer_l10n.dart';
 import '../../widgets/filmstrip.dart';
 
 /// Picks the cover frame on the composition timeline.
@@ -54,7 +55,9 @@ class CoverToolPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Cover · ${_fmt(Duration(milliseconds: currentMs.round()))}',
+            context.composerL10n.textWith('coverAt', {
+              'time': _fmt(Duration(milliseconds: currentMs.round())),
+            }),
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.muted, fontSize: 12),
           ),
@@ -118,14 +121,14 @@ class CoverToolPanel extends StatelessWidget {
               },
               icon: const Icon(Icons.image_outlined, color: Colors.white),
               label: Text(
-                'Utiliser la frame actuelle',
+                context.composerL10n.text('useCurrentFrame'),
                 style: TextStyle(color: theme.foreground),
               ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Export',
+            context.composerL10n.text('export'),
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.muted, fontSize: 12),
           ),

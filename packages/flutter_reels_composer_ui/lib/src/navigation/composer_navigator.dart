@@ -54,7 +54,7 @@ class _ComposerNavigatorState extends State<ComposerNavigator> {
 
     final chosen = await showModalBottomSheet<ProjectDocument>(
       context: context,
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: widget.config.theme.sheet,
       showDragHandle: true,
       builder: (ctx) {
         return SafeArea(
@@ -145,12 +145,12 @@ class _ComposerNavigatorState extends State<ComposerNavigator> {
   String _formatRelative(DateTime dt) {
     final diff = DateTime.now().difference(dt);
     if (diff.inMinutes < 60) {
-      return '${_l10n.text('ago')} ${diff.inMinutes} min';
+      return '${_l10n.text('ago')} ${diff.inMinutes} ${_l10n.text('minutesShort')}';
     }
     if (diff.inHours < 48) {
-      return '${_l10n.text('ago')} ${diff.inHours} h';
+      return '${_l10n.text('ago')} ${diff.inHours} ${_l10n.text('hoursShort')}';
     }
-    return '${_l10n.text('ago')} ${diff.inDays} d';
+    return '${_l10n.text('ago')} ${diff.inDays} ${_l10n.text('daysShort')}';
   }
 
   void _close() {

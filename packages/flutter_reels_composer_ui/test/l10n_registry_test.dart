@@ -32,6 +32,13 @@ void main() {
     expect(en.text('fade'), 'Fade');
     expect(fr.text('fade'), 'Fondu');
     expect(fr.text('newText'), 'Nouveau');
+    expect(fr.text('templates'), 'Modèles');
+    expect(fr.text('cover'), 'Couverture');
+    expect(fr.text('cameraRecordHint'), contains('Maintiens en continu'));
+    expect(fr.text('duetPip'), 'PiP');
+    expect(en.textWith('clipIndex', {'current': 1, 'total': 2}), 'Clip 1/2');
+    expect(ComposerL10n.keysFor('fr'), ComposerL10n.keysFor('en'));
+    expect(ComposerL10n.keysFor('ar'), ComposerL10n.keysFor('en'));
     expect(en.toolLabel(ComposerFeature.trim), 'Trim');
   });
 
