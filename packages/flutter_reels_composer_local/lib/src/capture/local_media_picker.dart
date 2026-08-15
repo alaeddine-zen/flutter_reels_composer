@@ -134,14 +134,14 @@ class LocalMediaPicker implements MediaPickerPort {
     try {
       final FilePickerResult? result;
       if (Platform.isIOS) {
-        result = await FilePicker.pickFiles(
+        result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'caf'],
           allowMultiple: false,
           withData: true,
         );
       } else {
-        result = await FilePicker.pickFiles(
+        result = await FilePicker.platform.pickFiles(
           type: FileType.audio,
           allowMultiple: false,
           withData: false,

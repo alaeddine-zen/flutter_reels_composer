@@ -48,6 +48,7 @@ void main() {
     );
     await controller.undo();
     expect(controller.project.clips, hasLength(1));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('timeline-fade')));
     await tester.pumpAndSettle();

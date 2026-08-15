@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../api/composer_errors.dart';
 import '../capabilities/composer_capabilities.dart';
 import '../contracts/capture_port.dart';
 import '../contracts/composer_engine.dart';
