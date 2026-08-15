@@ -121,22 +121,7 @@ class _FilmstripState extends State<Filmstrip> {
                     const ColoredBox(color: Colors.white12),
               )
             else if (_frames.isEmpty)
-              ColoredBox(
-                color: Colors.white10,
-                child: Row(
-                  children: List.generate(
-                    widget.count,
-                    (i) => Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                        color: Colors.white.withValues(
-                          alpha: 0.06 + (i % 3) * 0.03,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              )
+              const ColoredBox(color: Colors.white10)
             else
               Row(
                 children: [

@@ -10,8 +10,9 @@
 - Editor chrome no longer rebuilds on every preview tick; timeline playhead
   listens to `PreviewPort` only.
 - Clip filmstrips extract 8 stable source frames (trim/zoom crop in-widget).
-- Prefetch those thumbs when the project loads. Music tool meter is a
-  start-offset bar (not fake PCM).
+- Prefetch those thumbs when the project loads.
+- Remove decorative music waveform; start offset is a slider only.
+- Hide caption Generate unless `CaptionEngine.canTranscribe`.
 
 ## 0.2.0
 

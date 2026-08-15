@@ -289,6 +289,12 @@ void main() {
       expect(textLooksRtl('mix مرحبا ok'), isTrue);
     });
   });
+
+  group('CaptionEngine', () {
+    test('NullCaptionEngine cannot transcribe', () {
+      expect(const NullCaptionEngine().canTranscribe, isFalse);
+    });
+  });
 }
 
 class _StubTool implements EditorTool {

@@ -172,23 +172,25 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _busy ? null : _generate,
-                  icon: _busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome, size: 18),
-                  label: Text(context.composerL10n.text('generate')),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: widget.theme.accent,
+              if (widget.captionEngine.canTranscribe) ...[
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _busy ? null : _generate,
+                    icon: _busy
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome, size: 18),
+                    label: Text(context.composerL10n.text('generate')),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: widget.theme.accent,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               TextButton(
                 onPressed: _captions.isEmpty ? null : _clear,
                 child: const Text('Effacer'),

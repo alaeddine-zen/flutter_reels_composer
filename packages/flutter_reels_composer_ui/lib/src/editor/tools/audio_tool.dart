@@ -3,7 +3,6 @@ import 'package:uuid/uuid.dart';
 
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
 import '../../l10n/composer_l10n.dart';
-import '../../widgets/music_waveform.dart';
 
 /// Applies music mutations only — preview playback is owned by LocalPreviewPort.
 class AudioToolPanel extends StatefulWidget {
@@ -195,7 +194,7 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: _hasSelection ? 310 : 220,
+          height: _hasSelection ? 268 : 220,
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -285,21 +284,7 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                   ],
                 ),
               ),
-              if (_hasSelection) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                  child: MusicWaveform(
-                    seed:
-                        _effectiveMusicPath ??
-                        widget.selectedMusicId ??
-                        'music',
-                    progress: _maxStartMs <= 0
-                        ? 0
-                        : (_startOffsetMs / _maxStartMs).clamp(0.0, 1.0),
-                    accent: widget.theme.accent,
-                    height: 32,
-                  ),
-                ),
+              if (_hasSelection)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                   child: Row(
@@ -348,7 +333,6 @@ class _AudioToolPanelState extends State<AudioToolPanel> {
                     ],
                   ),
                 ),
-              ],
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

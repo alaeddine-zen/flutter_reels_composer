@@ -92,6 +92,7 @@ Tap **Open composer**. See [example/README.md](../example/README.md).
 ## Next
 
 - [ComposerConfig](api/composer-config.md) — catalogs, tools, duet, analytics, autosave
+- [Audio](audio.md) — original + music mix (no waveform / voice-over)
 - [Performance](performance.md) — preview, filmstrips, drafts
 - [LGPL vs GPL](licensing.md) — do not mix facades
 - [Extensibility](extensibility.md) — custom tools and exporters

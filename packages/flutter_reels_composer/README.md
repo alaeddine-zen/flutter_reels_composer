@@ -45,5 +45,6 @@ For x264, use [`flutter_reels_composer_gpl`](../flutter_reels_composer_gpl) and
 - [Getting started](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/getting-started.md)
 - [ComposerConfig](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/api/composer-config.md)
 - [Performance](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/performance.md)
+- [Audio](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/audio.md)
 - [Permissions](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/permissions.md)
 - [Licensing](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/licensing.md)

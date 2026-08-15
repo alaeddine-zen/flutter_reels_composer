@@ -28,6 +28,8 @@ is unchanged.
 - Export: `executeAsync` complete callback ; `ffmpegEscapePath` (`\`, `"`, `$`, `` ` ``)
 - Horloges preview: resync musique ≥ 120 ms, duet sans seek à chaque tick, prefetch filmstrips
 - Guide [docs/verification.md](docs/verification.md) (tests + checks device)
+- Suppression des chrome factices : waveform musique, Generate captions sans moteur, filmstrip « faux frames »
+- Guide audio [docs/audio.md](docs/audio.md)
 
 ## 0.2.0
 

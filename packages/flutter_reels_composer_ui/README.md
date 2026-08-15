@@ -9,6 +9,7 @@ Composable camera, gallery, and editor screens for Flutter Reels Composer.
 - `ClipTimeline`: split, trim/roll, snap, zoom, dip-to-black fade
 - Editor undo / redo (buttons + Ctrl/Cmd+Z)
 - Filmstrips: stable 8-frame source extract (trim/zoom crop in the widget)
+- Audio tool: volumes + start offset (no waveform widget)
 
 Most applications should depend on
 [`flutter_reels_composer`](../flutter_reels_composer). The main library

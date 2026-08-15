@@ -16,6 +16,7 @@
 - Preview clock helpers (`musicSeekTarget`, duet drift gates,
   `prefetchTimelineThumbs`) with unit tests. `FakePreviewPort.setLooping`
   stores the flag.
+- `CaptionEngine.canTranscribe` (`NullCaptionEngine` is false).
 
 ## 0.2.0
 

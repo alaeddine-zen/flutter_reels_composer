@@ -53,20 +53,21 @@ cache will miss.
    updates, media copy skipped if length matches.
 6. **Loop.** Default: composition restarts. `preview.setLooping(false)`
    pauses at the last frame (no silent API no-op).
-7. **Music tool meter.** The bar is a **start-offset** meter (equal heights),
-   not PCM. Drag “start”: the highlight moves; heights stay equal.
+7. **Audio tool.** Original / music volumes and start offset sliders only.
+   There is no waveform widget.
 
-## What we do not fake
+## What is not in the tree
 
-These stay **unsupported** until a real port exists. Export already throws
-`UnsupportedExportException` rather than dropping them:
+Deleted or never shipped as product UI (do not re-add placeholders):
 
-- Stickers / drawings as baked overlays
-- Voice-over recording and mix
-- `.cube` LUT files (color is a 4×5 matrix)
-- GPU / native timeline exporter (bake is FFmpeg Kit)
+- Music waveform / RNG PCM bars
+- Voice-over recorder
+- Auto-caption Generate when `CaptionEngine.canTranscribe` is false
+- Stickers, beauty, AR, green screen, `.cube` LUT files, GPU exporter
 
 Capability gates (`stickers`, `beauty`, …) are for **host** `extraTools`.
+Export throws `UnsupportedExportException` for sticker overlays and
+voice-over tracks instead of dropping them.
 
 ## Architecture leftover
 

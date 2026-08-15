@@ -102,8 +102,8 @@ Try the bundled host: [`example/`](example/).
 | History | Undo / redo (`ComposerController.apply` / `applyLive`, Ctrl/Cmd+Z) |
 | Look | Color filters (bundled + host `EffectCatalog`); preview = export `ColorGrade` |
 | Overlays | Draggable / rotatable text layers; RTL via `textLooksRtl` |
-| Audio | Music catalog + device audio; original + music mix |
-| Captions | Pluggable `CaptionEngine` (default is a no-op) |
+| Audio | Original + music mix, catalog / device import, start offset + volumes. No waveform, no voice-over |
+| Captions | Manual lines in the captions tool. Auto-transcribe **only** if the host injects a `CaptionEngine` with `canTranscribe` (default `NullCaptionEngine` does not) |
 | Templates | Bundled JSON catalog, overridable |
 | Duet | Split or picture-in-picture when `parentVideoPath` + `duetLayout` are set |
 | Drafts | `FileDraftStore`; editor autosave every 8 s (`autosaveInterval`) |
@@ -329,7 +329,7 @@ FlutterReelsComposer.open(
 | `effectCatalog` | Empty | Merged on top of the bundled effects pack |
 | `templateCatalog` | Bundled JSON, then `TemplateCatalog.bundled` | Pass a non-empty catalog to replace |
 | `extraTools` | `[]` | Same `id` replaces a built-in tool |
-| `captionEngine` | `NullCaptionEngine` | Without a real engine, Generate returns no cues |
+| `captionEngine` | `NullCaptionEngine` | Auto-Generate is hidden until you inject a real engine |
 | `exporter` | `FfmpegLgplExportPort()` | Inject any `ExportPort` |
 | `draftStore` | `FileDraftStore()` | Or `MemoryDraftStore` / custom |
 | `autosaveInterval` | 8 s | `Duration.zero` disables periodic draft flush |
@@ -369,8 +369,13 @@ No. Android and iOS only.
 **Where do drafts live?**
 `FileDraftStore` writes under `getApplicationSupportDirectory()/reels_composer_drafts`.
 
-**Why are captions empty?**
-The default `NullCaptionEngine` returns `[]`. Inject a `CaptionEngine`.
+**Why is there no auto-caption Generate button?**
+Default `NullCaptionEngine.canTranscribe` is false. Inject a real
+`CaptionEngine` to transcribe. Manual caption lines still work.
+
+**Is there a music waveform or voice-over?**
+No. Those were never real features; decorative waveform chrome was removed.
+See [docs/audio.md](docs/audio.md).
 
 **Can I skip FFmpeg entirely?**
 Yes. Implement `ExportPort` (and usually `StillImageEncoderPort` +
@@ -393,6 +398,7 @@ not on the MIT/GPL façades or the main UI barrel.
 - [Architecture](docs/architecture.md)
 - [Performance](docs/performance.md)
 - [Verification](docs/verification.md)
+- [Audio](docs/audio.md)
 - [Extensibility](docs/extensibility.md)
 - [ComposerConfig API](docs/api/composer-config.md)
 - [Permissions](docs/permissions.md)

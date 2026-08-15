@@ -100,7 +100,7 @@ still runs; the recipe is the canonical plan.
 | `StillImageEncoderPort` | same LGPL exporter (3 s photo clips) |
 | `FrameExtractorPort` | `FfmpegLgplFrameExtractor` |
 | `DraftStore` | `FileDraftStore` |
-| `CaptionEngine` | `NullCaptionEngine` |
+| `CaptionEngine` | `NullCaptionEngine` (`canTranscribe: false`) |
 | `CapturePort` / `MediaPickerPort` / `PreviewPort` | created by the engine |
 
 UI never imports FFmpeg Kit. Thumbnails go through `FrameExtractorPort`.
@@ -123,8 +123,11 @@ UI never imports FFmpeg Kit. Thumbnails go through `FrameExtractorPort`.
 
 `LocalComposerEngine.capabilities` is `ComposerCapabilities.localV1` =
 `kDefaultV1Features` (record, gallery, trim, filters, text, music, cover,
-multi-clip, speed, templates, captions, duet). Not included: stickers, beauty,
-AR masks, green screen.
+multi-clip, speed, templates, captions tool, duet). Auto-caption Generate is
+off until the host injects a `CaptionEngine` with `canTranscribe`. Not
+included: stickers, beauty, AR masks, green screen, voice-over, waveforms.
+
+Audio mix: [audio.md](audio.md).
 
 ## Analytics
 

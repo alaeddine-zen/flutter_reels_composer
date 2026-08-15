@@ -31,7 +31,7 @@ The MIT facade fills unspecified ports:
 | `parentPostUuid` | `String?` | null | Duet metadata; if set without video, UI shows parent-missing copy |
 | `parentVideoPath` | `String?` | null | Local parent media for duet |
 | `duetLayout` | `DuetLayout` | `none` | `split` or `pip` when a parent path is set |
-| `captionEngine` | `CaptionEngine` | `NullCaptionEngine` | `transcribe(mediaPath, locale:)` |
+| `captionEngine` | `CaptionEngine` | `NullCaptionEngine` | `transcribe`; Generate hidden unless `canTranscribe` |
 | `frameExtractor` | `FrameExtractorPort` | `NoopFrameExtractor` then FFmpeg | Filmstrip / cover thumbs |
 | `onEvent` | `ComposerAnalyticsCallback?` | null | `ComposerAnalyticsEvent` |
 | `locale` | `Locale?` | inherited | Selects bundled `ComposerL10n` (`en`, `fr`, `ar`) |

@@ -58,6 +58,7 @@ only to honor cancel. Paths go through `ffmpegEscapePath` (`\`, `"`, `$`,
   Seeks use `duetSeekFromNotify` / `kDuetParentDriftThreshold`, not every tick.
 - Music uses `just_audio`. Playhead mapping is `musicSeekTarget`. Drift ≥
   120 ms triggers a seek while playing (`_correctMusicClock`).
-- The music-tool meter is a **start-offset** bar, not decoded PCM.
+- No waveform widget and no voice-over UI.
 
-How to prove each claim: [verification.md](verification.md).
+How to prove each claim: [verification.md](verification.md). Audio mix:
+[audio.md](audio.md).

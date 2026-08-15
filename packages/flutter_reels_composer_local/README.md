@@ -13,8 +13,8 @@ Photos import as `ImageClip` stills. `photoClipEncoder` remains as a fallback
 if the copy fails. This package does not depend on FFmpeg Kit.
 
 Preview throttles UI notifies (~50 ms), caches `RenderGraph`, and skips no-op
-`Opacity` / `ColorFiltered` layers. `FileDraftStore` skips redundant media
-copies on autosave.
+`Opacity` / `ColorFiltered` layers. Music preview is `just_audio` (no waveform
+UI). `FileDraftStore` skips redundant media copies on autosave.
 
 Docs: [engines](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/extensions/engines.md) ·
 [permissions](https://github.com/alaeddine-zen/flutter_reels_composer/blob/main/docs/permissions.md) ·

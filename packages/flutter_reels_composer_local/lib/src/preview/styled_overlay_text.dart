@@ -60,7 +60,7 @@ class StyledOverlayText extends StatelessWidget {
     );
   }
 
-  /// Fake stroke via multi-offset shadows (export uses the same idea).
+  /// Outline via multi-offset shadows (same approach as the export PNG).
   static List<Shadow> _strokeShadows(Color fill) {
     const offsets = <Offset>[
       Offset(-1.5, -1.5),
