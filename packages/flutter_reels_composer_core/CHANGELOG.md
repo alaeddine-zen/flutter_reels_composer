@@ -4,6 +4,7 @@
 - Deprecate `FfmpegFilters` in core (moved to export packages).
 - `ComposerController.applyLive` coalesces slider/drag gestures into one undo
   entry. Editor tools should call `apply` / `applyLive`, not `applyMutation`.
+- `SplitClipMutation`, `rollJunction`, `snapDuration` for the editor timeline.
 
 ## 0.2.0
 

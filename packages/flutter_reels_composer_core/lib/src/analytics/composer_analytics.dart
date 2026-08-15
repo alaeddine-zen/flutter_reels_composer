@@ -14,6 +14,7 @@ enum ComposerAnalyticsEventType {
   templateApplied,
   undo,
   redo,
+  clipSplit,
   effectPackLoadFailed,
   templateCatalogLoadFailed,
   duetStarted,

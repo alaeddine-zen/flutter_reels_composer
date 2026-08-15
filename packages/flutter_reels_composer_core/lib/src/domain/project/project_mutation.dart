@@ -2,6 +2,7 @@ import 'package:flutter/painting.dart';
 
 import '../../api/caption_engine.dart';
 import '../templates/reel_template.dart';
+import '../timeline/timeline_ops.dart';
 import 'audio_track.dart';
 import 'cover_choice.dart';
 import 'duet_layout.dart';
@@ -106,6 +107,18 @@ class UpdateClipSpeedMutation extends ProjectMutation {
   const UpdateClipSpeedMutation({required this.clipId, required this.speed});
   final String clipId;
   final double speed;
+}
+
+/// Cuts [clipId] at composition time [at]. [newClipId] is the right-hand piece.
+class SplitClipMutation extends ProjectMutation {
+  const SplitClipMutation({
+    required this.clipId,
+    required this.at,
+    required this.newClipId,
+  });
+  final String clipId;
+  final Duration at;
+  final String newClipId;
 }
 
 class SetCaptionCuesMutation extends ProjectMutation {
@@ -267,6 +280,19 @@ ProjectDocument applyProjectMutation(
                 .toList(),
           )
           .touch();
+    case SplitClipMutation(:final clipId, :final at, :final newClipId):
+      final clips = [...project.clips];
+      final index = clips.indexWhere((c) => c.id == clipId);
+      if (index < 0) return project;
+      final split = splitLegacyClip(
+        clip: clips[index],
+        prefix: prefixBeforeClip(clips, index),
+        at: at,
+        newClipId: newClipId,
+      );
+      if (split == null) return project;
+      clips.replaceRange(index, index + 1, [split.left, split.right]);
+      return project.copyWith(clips: clips).touch();
     case SetCaptionCuesMutation(:final cues):
       final kept = project.layers
           .where((l) => l.role != VisualLayer.roleCaption)

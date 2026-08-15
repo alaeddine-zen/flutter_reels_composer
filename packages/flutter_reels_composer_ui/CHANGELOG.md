@@ -2,6 +2,7 @@
 
 - Wire editor tools through `ComposerController.apply` / `applyLive`.
 - Add undo / redo in the editor (buttons + Ctrl/Cmd+Z).
+- Professional `ClipTimeline`: split, trim/roll handles, snap, zoom.
 
 ## 0.2.0
 

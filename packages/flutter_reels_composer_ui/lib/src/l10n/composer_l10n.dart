@@ -87,6 +87,10 @@ class ComposerL10n implements ComposerToolL10n {
     'noClip': 'No clips',
     'selectedCount': '{count} selected',
     'speedClip': 'Speed · clip {current}/{total}',
+    'splitClip': 'Split clip',
+    'deleteClip': 'Delete clip',
+    'zoomIn': 'Zoom in',
+    'zoomOut': 'Zoom out',
   };
 
   static const _fr = {
@@ -165,6 +169,10 @@ class ComposerL10n implements ComposerToolL10n {
     'noClip': 'Aucun clip',
     'selectedCount': '{count} sélectionné(s)',
     'speedClip': 'Vitesse · clip {current}/{total}',
+    'splitClip': 'Couper le clip',
+    'deleteClip': 'Supprimer le clip',
+    'zoomIn': 'Zoom avant',
+    'zoomOut': 'Zoom arrière',
   };
 
   static const _ar = {
@@ -241,6 +249,10 @@ class ComposerL10n implements ComposerToolL10n {
     'noClip': 'لا توجد مقاطع',
     'selectedCount': 'تم تحديد {count}',
     'speedClip': 'السرعة · المقطع {current}/{total}',
+    'splitClip': 'تقسيم المقطع',
+    'deleteClip': 'حذف المقطع',
+    'zoomIn': 'تكبير',
+    'zoomOut': 'تصغير',
   };
 
   @override

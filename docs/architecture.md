@@ -53,6 +53,8 @@ still applies a `ProjectMutation` underneath.
 
 `Timeline.fromDocument` and `RenderGraph.fromProject` are **derived views** —
 not a second store. Preview and FFmpeg export consume the same graph.
+The editor timeline (`ClipTimeline`) splits, trims and rolls clips through
+`ComposerController`; export concatenates the resulting segments.
 
 Color is a 4×5 `ColorFilter` matrix (`ColorGrade`), applied as
 `ColorFilter.matrix` in preview and `colorchannelmixer` (+ `lutrgb` offsets)

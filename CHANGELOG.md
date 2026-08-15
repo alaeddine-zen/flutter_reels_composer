@@ -15,6 +15,7 @@ is unchanged.
 - `FfmpegFilters` in core is deprecated (helpers live in export packages)
 - Editor undo/redo: tools call `ComposerController.apply` / `applyLive` ;
   gestures (trim, intensity, drag texte) coalescent en une entrée d'historique
+- Timeline éditeur : split, poignées trim/roll, snap, zoom
 
 ## 0.2.0
 

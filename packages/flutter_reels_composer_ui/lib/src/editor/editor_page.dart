@@ -564,7 +564,7 @@ class _EditorPageState extends State<EditorPage> {
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (project.clips.length > 1)
+                                              if (project.clips.isNotEmpty)
                                                 ClipTimeline(
                                                   theme: theme,
                                                   project: project,
@@ -572,16 +572,35 @@ class _EditorPageState extends State<EditorPage> {
                                                   frameExtractor: widget
                                                       .config
                                                       .frameExtractor,
+                                                  controller: _controller,
+                                                  maxDuration:
+                                                      widget.config.maxDuration,
+                                                  canSplit: _gate.allows(
+                                                    ComposerFeature.multiClip,
+                                                  ),
+                                                  canDelete: _gate.allows(
+                                                    ComposerFeature.multiClip,
+                                                  ),
+                                                  l10n: _l10n,
                                                   onSeek: (d) {
                                                     preview.pause();
                                                     preview.seek(d);
                                                   },
+                                                  onSplit: () {
+                                                    widget.config.onEvent?.call(
+                                                      const ComposerAnalyticsEvent(
+                                                        ComposerAnalyticsEventType
+                                                            .clipSplit,
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                              else
+                                                PreviewScrubber(
+                                                  theme: theme,
+                                                  preview: preview,
+                                                  bottomInset: 8,
                                                 ),
-                                              PreviewScrubber(
-                                                theme: theme,
-                                                preview: preview,
-                                                bottomInset: 8,
-                                              ),
                                             ],
                                           ),
                                         ),
@@ -589,7 +608,7 @@ class _EditorPageState extends State<EditorPage> {
                                     Positioned(
                                       right: 8,
                                       top: 72,
-                                      bottom: _selectedToolId == null ? 72 : 8,
+                                      bottom: _selectedToolId == null ? 140 : 8,
                                       width: 72,
                                       child: SingleChildScrollView(
                                         child: ToolRail(

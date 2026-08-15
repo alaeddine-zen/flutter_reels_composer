@@ -37,6 +37,7 @@ export 'src/domain/project/visual_layer.dart';
 export 'src/domain/templates/reel_template.dart';
 export 'src/domain/timeline/clip.dart';
 export 'src/domain/timeline/timeline.dart';
+export 'src/domain/timeline/timeline_ops.dart';
 export 'src/domain/timeline/track.dart';
 export 'src/export/export_capabilities.dart';
 export 'src/export/export_planner.dart';
