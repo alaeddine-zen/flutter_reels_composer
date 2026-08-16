@@ -46,7 +46,7 @@ class RecordButton extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: progress.clamp(0, 1),
                 strokeWidth: 4,
-                color: theme.accent,
+                color: theme.recordRed,
                 backgroundColor: Colors.white24,
               ),
             ),

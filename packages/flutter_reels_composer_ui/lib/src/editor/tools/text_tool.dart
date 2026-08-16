@@ -161,9 +161,9 @@ class _TextToolPanelState extends State<TextToolPanel> {
         .length;
     if (userTexts >= 3) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Maximum 3 textes')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.composerL10n.text('textMaxThree'))),
+      );
       return;
     }
     final id = const Uuid().v4();
@@ -300,21 +300,21 @@ class _TextToolPanelState extends State<TextToolPanel> {
           Row(
             children: [
               _StyleChip(
-                label: 'Ombre',
+                label: context.composerL10n.text('textShadow'),
                 selected: _backdrop == TextBackdrop.none,
                 accent: widget.theme.accent,
                 onTap: () => _applyBackdrop(TextBackdrop.none),
               ),
               const SizedBox(width: 8),
               _StyleChip(
-                label: 'Contour',
+                label: context.composerL10n.text('textOutline'),
                 selected: _backdrop == TextBackdrop.stroke,
                 accent: widget.theme.accent,
                 onTap: () => _applyBackdrop(TextBackdrop.stroke),
               ),
               const SizedBox(width: 8),
               _StyleChip(
-                label: 'Fond',
+                label: context.composerL10n.text('textFill'),
                 selected: _backdrop == TextBackdrop.fill,
                 accent: widget.theme.accent,
                 onTap: () => _applyBackdrop(TextBackdrop.fill),

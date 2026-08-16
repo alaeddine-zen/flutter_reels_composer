@@ -92,7 +92,13 @@ class _GalleryPageState extends State<GalleryPage>
           _selected.add(asset);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Maximum $_maxClips clips')),
+            SnackBar(
+              content: Text(
+                context.composerL10n.textWith('galleryMaxClips', {
+                  'count': _maxClips,
+                }),
+              ),
+            ),
           );
         }
       });
@@ -256,7 +262,9 @@ class _GalleryPageState extends State<GalleryPage>
             TextButton(
               onPressed: _importing ? null : _toggleMulti,
               child: Text(
-                _multiMode ? 'OK' : 'Multi',
+                _multiMode
+                    ? context.composerL10n.text('galleryDone')
+                    : context.composerL10n.text('galleryMulti'),
                 style: TextStyle(color: theme.accent),
               ),
             ),
@@ -304,6 +312,7 @@ class _GalleryPageState extends State<GalleryPage>
                           emptyLabel: context.composerL10n.text('noVideo'),
                           selectedOrder: _selected.map((e) => e.id).toList(),
                           multiMode: _multiMode,
+                          accent: theme.accent,
                           onTap: _onAssetTap,
                           onLongPress: _onAssetLongPress,
                         ),
@@ -313,6 +322,7 @@ class _GalleryPageState extends State<GalleryPage>
                           badge: '3s',
                           selectedOrder: _selected.map((e) => e.id).toList(),
                           multiMode: _multiMode,
+                          accent: theme.accent,
                           onTap: _onAssetTap,
                           onLongPress: _onAssetLongPress,
                         ),
@@ -413,6 +423,7 @@ class _Grid extends StatelessWidget {
     required this.emptyLabel,
     required this.selectedOrder,
     required this.multiMode,
+    required this.accent,
     this.badge,
   });
 
@@ -422,6 +433,7 @@ class _Grid extends StatelessWidget {
   final String emptyLabel;
   final List<String> selectedOrder;
   final bool multiMode;
+  final Color accent;
   final String? badge;
 
   @override
@@ -459,9 +471,7 @@ class _Grid extends StatelessWidget {
                   right: 6,
                   child: CircleAvatar(
                     radius: 12,
-                    backgroundColor: selected
-                        ? const Color(0xFFFF2D55)
-                        : Colors.black45,
+                    backgroundColor: selected ? accent : Colors.black45,
                     child: selected
                         ? Text(
                             '${order + 1}',

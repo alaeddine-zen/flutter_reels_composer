@@ -184,7 +184,10 @@ class _TrimToolPanelState extends State<TrimToolPanel> {
                 ),
                 Expanded(
                   child: Text(
-                    'Clip ${_clipIndex + 1}/${clips.length}',
+                    context.composerL10n.textWith('clipIndex', {
+                      'current': _clipIndex + 1,
+                      'total': clips.length,
+                    }),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: widget.theme.foreground,
@@ -207,7 +210,7 @@ class _TrimToolPanelState extends State<TrimToolPanel> {
             '${_fmt(Duration(milliseconds: _range.start.round()))} → '
             '${_fmt(Duration(milliseconds: _range.end.round()))}'
             '  · ${_fmt(kept)} ${context.composerL10n.text('kept')}'
-            '  · max ${_fmt(Duration(milliseconds: maxSpan.round()))}',
+            '  · ${context.composerL10n.text('trimMax')} ${_fmt(Duration(milliseconds: maxSpan.round()))}',
             textAlign: TextAlign.center,
             style: TextStyle(color: widget.theme.muted, fontSize: 12),
           ),

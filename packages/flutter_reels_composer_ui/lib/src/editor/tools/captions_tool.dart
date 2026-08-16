@@ -88,11 +88,7 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
       if (!mounted) return;
       if (cues.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Pas de sous-titres auto — saisis tes phrases ci-dessous',
-            ),
-          ),
+          SnackBar(content: Text(context.composerL10n.text('captionsEmpty'))),
         );
         return;
       }
@@ -193,7 +189,7 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
               ],
               TextButton(
                 onPressed: _captions.isEmpty ? null : _clear,
-                child: const Text('Effacer'),
+                child: Text(context.composerL10n.text('clear')),
               ),
             ],
           ),
@@ -204,7 +200,7 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
             maxLines: 4,
             style: const TextStyle(color: Colors.white, fontSize: 14),
             decoration: InputDecoration(
-              hintText: 'Ou colle tes phrases (une par ligne)',
+              hintText: context.composerL10n.text('captionsHint'),
               hintStyle: TextStyle(color: widget.theme.muted),
               filled: true,
               fillColor: Colors.white10,
@@ -219,7 +215,7 @@ class _CaptionsToolPanelState extends State<CaptionsToolPanel> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _applyManual,
-              child: Text(context.composerL10n.text('split')),
+              child: Text(context.composerL10n.text('apply')),
             ),
           ),
           if (_captions.isNotEmpty)

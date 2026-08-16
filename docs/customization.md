@@ -28,7 +28,8 @@ Field-by-field: [api/composer-config.md](api/composer-config.md).
 ## Theme
 
 `ComposerTheme.snapTikTok` is the default (black background, pink accent
-`0xFFFF2D55`). Override any color or `toolIconSize` / `recordButtonSize`.
+`0xFFFF2D55`, dark `sheet` for dialogs and tool panels). Override any color
+or `toolIconSize` / `recordButtonSize`.
 The facade wraps the route in `theme.toThemeData()` (dark Material 3).
 
 ## Text and localization

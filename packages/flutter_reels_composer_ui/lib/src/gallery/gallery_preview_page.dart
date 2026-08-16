@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
+import '../widgets/composer_next_button.dart';
 import '../widgets/filmstrip.dart';
 import '../l10n/composer_l10n.dart';
 
@@ -173,13 +174,9 @@ class _GalleryPreviewPageState extends State<GalleryPreviewPage> {
                         ),
                       ),
                     ),
-                    FilledButton(
+                    ComposerNextButton(
+                      label: context.composerL10n.text('next'),
                       onPressed: _ready ? _confirm : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.accent,
-                        shape: const StadiumBorder(),
-                      ),
-                      child: Text(context.composerL10n.text('next')),
                     ),
                     const SizedBox(width: 8),
                   ],

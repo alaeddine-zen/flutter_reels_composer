@@ -305,18 +305,18 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         : config.templateCatalog;
     final chosen = await showModalBottomSheet<_TemplateChoice>(
       context: context,
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: config.theme.sheet,
       showDragHandle: true,
       builder: (ctx) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Text(
-                  'Templates',
-                  style: TextStyle(
+                  ctx.composerL10n.text('templates'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
@@ -364,7 +364,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     if (_recording || _countdown) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: config.theme.sheet,
       showDragHandle: true,
       builder: (ctx) {
         final tracks = config.musicCatalog.tracks;
@@ -393,7 +393,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                   style: const TextStyle(color: Colors.white),
                 ),
                 subtitle: Text(
-                  _musicTitle ?? 'MP3, M4A, WAV…',
+                  _musicTitle ?? context.composerL10n.text('audioFormats'),
                   style: TextStyle(color: config.theme.muted, fontSize: 12),
                 ),
                 onTap: () async {
@@ -404,9 +404,9 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
               if (_musicPath != null)
                 ListTile(
                   leading: const Icon(Icons.music_off, color: Colors.white70),
-                  title: const Text(
-                    'Retirer le son',
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    context.composerL10n.text('removeSound'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -671,7 +671,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
+        backgroundColor: config.theme.sheet,
         title: Text(
           l10n.text('leaveConfirm'),
           style: const TextStyle(color: Colors.white),
@@ -856,7 +856,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                         const Spacer(),
                         if (config.isDuet && !_countdown) ...[
                           DuetLayoutChip(
-                            label: 'Split',
+                            label: context.composerL10n.text('duetSplit'),
                             selected: _duetLayout == DuetLayout.split,
                             accent: theme.accent,
                             onTap: _recording
@@ -867,7 +867,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                           ),
                           const SizedBox(width: 6),
                           DuetLayoutChip(
-                            label: 'PiP',
+                            label: context.composerL10n.text('duetPip'),
                             selected: _duetLayout == DuetLayout.pip,
                             accent: theme.accent,
                             onTap: _recording
@@ -882,7 +882,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                           ComposerFeature.templates,
                         ))
                           IconButton(
-                            tooltip: 'Templates',
+                            tooltip: context.composerL10n.text('templates'),
                             onPressed: _recording || _countdown
                                 ? null
                                 : _openTemplateSheet,
@@ -972,7 +972,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                             ),
                           ),
                           Text(
-                            'Toucher pour annuler',
+                            context.composerL10n.text('cameraTouchToCancel'),
                             style: TextStyle(color: theme.muted, fontSize: 13),
                           ),
                         ],
@@ -988,7 +988,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                       _session.isReady &&
                       _segments.isEmpty)
                     Text(
-                      'Appuie pour filmer · Maintiens pour hold',
+                      context.composerL10n.text('cameraRecordHint'),
                       style: TextStyle(color: theme.muted, fontSize: 12),
                     ),
                   const Spacer(),

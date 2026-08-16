@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_reels_composer_core/flutter_reels_composer_core.dart';
 
 import '../widgets/clip_timeline.dart';
+import '../widgets/composer_next_button.dart';
 import '../widgets/duet_layout_chip.dart';
 import '../widgets/tool_rail.dart';
 import 'default_tools.dart';
@@ -180,7 +181,7 @@ class _EditorPageState extends State<EditorPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
+        backgroundColor: widget.config.theme.sheet,
         title: Text(
           _l10n.text('retake'),
           style: const TextStyle(color: Colors.white),
@@ -530,26 +531,11 @@ class _EditorPageState extends State<EditorPage> {
                                             tooltip: _l10n.text('redo'),
                                           ),
                                           const Spacer(),
-                                          FilledButton(
+                                          ComposerNextButton(
+                                            label: _l10n.text('next'),
                                             onPressed: _exporting
                                                 ? null
                                                 : _export,
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: theme.accent,
-                                              foregroundColor: Colors.white,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 20,
-                                                    vertical: 10,
-                                                  ),
-                                              shape: const StadiumBorder(),
-                                            ),
-                                            child: Text(
-                                              _l10n.text('next'),
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
                                           ),
                                           const SizedBox(width: 8),
                                         ],
@@ -567,7 +553,7 @@ class _EditorPageState extends State<EditorPage> {
                                         child: Row(
                                           children: [
                                             DuetLayoutChip(
-                                              label: 'Split',
+                                              label: _l10n.text('duetSplit'),
                                               selected:
                                                   project.duetLayout ==
                                                   DuetLayout.split,
@@ -586,7 +572,7 @@ class _EditorPageState extends State<EditorPage> {
                                             ),
                                             const SizedBox(width: 8),
                                             DuetLayoutChip(
-                                              label: 'PiP',
+                                              label: _l10n.text('duetPip'),
                                               selected:
                                                   project.duetLayout ==
                                                   DuetLayout.pip,

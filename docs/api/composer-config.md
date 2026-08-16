@@ -52,6 +52,7 @@ const ComposerTheme({
   Color foreground = Color(0xFFFFFFFF),
   Color accent = Color(0xFFFF2D55),
   Color secondary = Color(0xFF2C2C2E),
+  Color sheet = Color(0xFF161616),
   Color muted = Color(0x99FFFFFF),
   Color recordRed = Color(0xFFFF3B30),
   double toolIconSize = 26,

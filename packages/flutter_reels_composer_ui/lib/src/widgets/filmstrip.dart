@@ -89,7 +89,7 @@ class _FilmstripState extends State<Filmstrip> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = widget.accent ?? const Color(0xFFFF2D55);
+    final accent = widget.accent ?? ComposerTheme.snapTikTok.accent;
     return SizedBox(
       height: widget.height,
       child: ClipRRect(

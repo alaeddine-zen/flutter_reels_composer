@@ -13,14 +13,34 @@ import 'tools/text_tool.dart';
 import 'tools/trim_tool.dart';
 
 class _PanelShell extends StatelessWidget {
-  const _PanelShell({required this.child});
+  const _PanelShell({required this.theme, required this.child});
+  final ComposerTheme theme;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xE6111111),
-      child: SafeArea(top: false, child: child),
+      color: theme.sheet.withValues(alpha: 0.94),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+            ),
+            child,
+          ],
+        ),
+      ),
     );
   }
 }
@@ -40,6 +60,7 @@ class TrimEditorTool implements EditorTool {
     final preview = ctx.preview;
     if (preview == null) return const SizedBox.shrink();
     return _PanelShell(
+      theme: ctx.theme,
       child: TrimToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -65,6 +86,7 @@ class FilterEditorTool implements EditorTool {
   @override
   Widget buildPanel(EditorToolContext ctx) {
     return _PanelShell(
+      theme: ctx.theme,
       child: FilterToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -93,6 +115,7 @@ class TextEditorTool implements EditorTool {
   @override
   Widget buildPanel(EditorToolContext ctx) {
     return _PanelShell(
+      theme: ctx.theme,
       child: TextToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -117,15 +140,18 @@ class AudioEditorTool implements EditorTool {
   String label(ComposerToolL10n l10n) => l10n.toolLabel(feature);
   @override
   Widget buildPanel(EditorToolContext ctx) {
-    return AudioToolPanel(
+    return _PanelShell(
       theme: ctx.theme,
-      controller: ctx.controller,
-      catalog: ctx.config.musicCatalog,
-      selectedMusicId: ctx.project.audioTracks
-          .where((t) => t.kind == AudioTrackKind.music)
-          .map((t) => t.musicId)
-          .firstWhere((id) => id != null, orElse: () => null),
-      preview: ctx.preview,
+      child: AudioToolPanel(
+        theme: ctx.theme,
+        controller: ctx.controller,
+        catalog: ctx.config.musicCatalog,
+        selectedMusicId: ctx.project.audioTracks
+            .where((t) => t.kind == AudioTrackKind.music)
+            .map((t) => t.musicId)
+            .firstWhere((id) => id != null, orElse: () => null),
+        preview: ctx.preview,
+      ),
     );
   }
 }
@@ -145,6 +171,7 @@ class CoverEditorTool implements EditorTool {
     final preview = ctx.preview;
     if (preview == null) return const SizedBox.shrink();
     return _PanelShell(
+      theme: ctx.theme,
       child: CoverToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -171,6 +198,7 @@ class SpeedEditorTool implements EditorTool {
     final preview = ctx.preview;
     if (preview == null) return const SizedBox.shrink();
     return _PanelShell(
+      theme: ctx.theme,
       child: SpeedToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -202,6 +230,7 @@ class CaptionsEditorTool implements EditorTool {
   @override
   Widget buildPanel(EditorToolContext ctx) {
     return _PanelShell(
+      theme: ctx.theme,
       child: CaptionsToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,
@@ -234,6 +263,7 @@ class TemplateEditorTool implements EditorTool {
   @override
   Widget buildPanel(EditorToolContext ctx) {
     return _PanelShell(
+      theme: ctx.theme,
       child: TemplateToolPanel(
         theme: ctx.theme,
         controller: ctx.controller,

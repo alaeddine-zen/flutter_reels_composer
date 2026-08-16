@@ -213,14 +213,17 @@ class _FilterToolPanelState extends State<FilterToolPanel> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white24),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.compare, color: Colors.white70, size: 16),
-                    SizedBox(width: 6),
+                    const Icon(Icons.compare, color: Colors.white70, size: 16),
+                    const SizedBox(width: 6),
                     Text(
-                      'Maintenir · original',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      context.composerL10n.text('holdOriginal'),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
